@@ -1,59 +1,35 @@
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-
 body {
-  padding: 8px;
-  font-family: system-ui;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
-
-textarea {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-height: 40vh;
-  font-size: 16px;
-}
-
-#preview {
-  display: none;
-}
-
 
 #toolbar {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  gap: 4px;
-  padding: 6px;
-  background: #f0f0f0;
-  z-index: 10;
+  background: #eee;
+  border-top: 1px solid #ccc;
 }
 
 #toolbar button {
   flex: 1;
-  font-size: 16px;
-  padding: 6px 0;
-  border: none;
-  border-radius: 6px;
-  background: #fff;
+  font-size: 18px;
+  padding: 10px;
 }
 
 #editor {
+  padding: 16px;
+  padding-bottom: 70px;
+  min-height: 100vh;
   white-space: pre-wrap;
   outline: none;
   font-family: monospace;
-}
 
-/* Markdown風ハンギングインデント */
-#editor div,
-#editor p {
-  padding-left: 2em;
-  text-indent: -2em;
+  /* ハンギングインデント風 */
+  padding-left: 2.5em;
+  text-indent: -2.5em;
+
+  tab-size: 2;
 }

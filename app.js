@@ -1,17 +1,33 @@
-import { db, auth, login } from "./firebase.js";
-import { doc, setDoc, onSnapshot, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-	
-let isEditing = false;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  onSnapshot,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+/* Firebase config（あなたのものに置き換え） */
+const firebaseConfig = {
+  /* ... */
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 const editor = document.getElementById("editor");
-const preview = document.getElementById("preview");
-const loginBtn = document.getElementById("login");
 
-loginBtn.onclick = login;
+let isEditing = false;
+let debounceTimer = null;
 
+/* ---------- 保存 ---------- */
 
 function saveNow() {
   if (!auth.currentUser) return;
@@ -25,209 +41,89 @@ function saveNow() {
   );
 }
 
-editor.addEventListener("keydown", e => {
-  // IME変換中は何もしない（超重要）
-  if (e.isComposing) return;
+/* debounce 保存 */
+editor.addEventListener("input", () => {
+  isEditing = true;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    saveNow();
+    isEditing = false;
+  }, 500);
+});
 
-  // Enterキー以外は無視
-  if (e.key !== "Enter") return;
+/* ---------- Firestore 読み込み ---------- */
 
-  const pos = editor.selectionStart;
-  const text = editor.value;
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    signInWithPopup(auth, new GoogleAuthProvider());
+    return;
+  }
 
-  // 現在行を取得
-  const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
-  const line = text.slice(lineStart, pos);
+  onSnapshot(
+    doc(db, "users", user.uid, "memo", "main"),
+    snap => {
+      if (!snap.exists()) return;
+      if (isEditing) return;
 
-  // 箇条書き判定
-  const m = line.match(/^(\s*)([-*+]|\d+\.)\s+/);
-  if (!m) return;
-
-  // 行が記号だけなら補完しない（- → 改行で終了）
-  if (line.trim() === m[0].trim()) return;
-
-  e.preventDefault();
-
-  const indent = m[1];
-  const marker = m[2] + " ";
-
-  editor.setRangeText(
-    "\n" + indent + marker,
-    pos,
-    pos,
-    "end"
+      editor.innerText = snap.data().content || "";
+    }
   );
 });
 
-onAuthStateChanged(auth, user => {
-  if (!user) return;
-	
-	loginBtn.style.display = "none";
-	editor.focus();
+/* ---------- エディタ操作 ---------- */
 
-  const ref = doc(db, "users", user.uid, "memo", "main");
-
-  onSnapshot(ref, snap => {
-  if (!snap.exists()) return;
-  if (isEditing) return; // ← ここが核心
-
-  //editor.value = snap.data().content;
-	editor.innerText = docSnap.data().content;
-});
-
-  editor.oninput = debounce(() => {
-	  saveNow();
-	}, 500);
-	});
-
-function debounce(fn, ms) {
-  let t;
-  return () => {
-    clearTimeout(t);
-    t = setTimeout(fn, ms);
-  };
+function indent() {
+  document.execCommand("insertText", false, "\t");
 }
 
-editor.addEventListener("input", () => {
-  isEditing = true;
-});
+function outdent() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
 
+  const range = sel.getRangeAt(0);
+  const text = range.startContainer.textContent;
+  const offset = range.startOffset;
+
+  if (offset > 0 && text[offset - 1] === "\t") {
+    range.startContainer.textContent =
+      text.slice(0, offset - 1) + text.slice(offset);
+    range.setStart(range.startContainer, offset - 1);
+    range.collapse(true);
+  }
+}
+
+function moveLines(direction) {
+  const text = editor.innerText;
+  const lines = text.split("\n");
+
+  const sel = window.getSelection();
+  const pos = sel.anchorOffset;
+
+  let lineIndex = text.slice(0, pos).split("\n").length - 1;
+
+  if (direction === -1 && lineIndex === 0) return;
+  if (direction === 1 && lineIndex === lines.length - 1) return;
+
+  const target = direction === -1 ? lineIndex - 1 : lineIndex + 1;
+  [lines[lineIndex], lines[target]] = [lines[target], lines[lineIndex]];
+
+  editor.innerText = lines.join("\n");
+
+  saveNow();
+}
+
+/* ---------- ツールバー ---------- */
 
 document.querySelectorAll("#toolbar button").forEach(btn => {
   btn.onclick = () => {
     const action = btn.dataset.action;
 
-    if (action === "up") moveLines(-1);
-    if (action === "down") moveLines(1);
     if (action === "indent") indent();
     if (action === "outdent") outdent();
+    if (action === "up") moveLines(-1);
+    if (action === "down") moveLines(1);
 
     saveNow();
     editor.focus();
   };
 });
-
-
-function getLines() {
-  const value = editor.value;
-  const start = editor.selectionStart;
-  const end = editor.selectionEnd;
-
-  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
-  const lineEnd =
-    value.indexOf("\n", end) === -1
-      ? value.length
-      : value.indexOf("\n", end);
-
-  return { value, start, end, lineStart, lineEnd };
-}
-
-/* インデント */
-function indent() {
-  const value = editor.value;
-  const start = editor.selectionStart;
-  const end = editor.selectionEnd;
-
-  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
-  const lineEnd =
-    value.indexOf("\n", end) === -1
-      ? value.length
-      : value.indexOf("\n", end);
-
-  const lines = value.slice(lineStart, lineEnd).split("\n");
-
-  const result = lines.map(l => "\t" + l).join("\n");
-
-  editor.setRangeText(result, lineStart, lineEnd, "end");
-
-  // カーソル・選択を自然に維持
-  editor.selectionStart = start + 1;
-  editor.selectionEnd = end + lines.length;
-}
-
-/* アウトデント */
-function outdent() {
-  const value = editor.value;
-  const start = editor.selectionStart;
-  const end = editor.selectionEnd;
-
-  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
-  const lineEnd =
-    value.indexOf("\n", end) === -1
-      ? value.length
-      : value.indexOf("\n", end);
-
-  const lines = value.slice(lineStart, lineEnd).split("\n");
-
-  let removedTabs = 0;
-  const result = lines.map(line => {
-    if (line.startsWith("\t")) {
-      removedTabs++;
-      return line.substring(1); // ← 明示的に「タブ1文字だけ」
-    }
-    return line;
-  }).join("\n");
-
-  editor.setRangeText(result, lineStart, lineEnd, "end");
-
-  // カーソル補正（削除されたタブ分だけ戻す）
-  editor.selectionStart = Math.max(start - 1, lineStart);
-  editor.selectionEnd = Math.max(end - removedTabs, editor.selectionStart);
-}
-
-/* 行を上下に移動 */
-function moveLines(direction) {
-  const value = editor.value;
-  let start = editor.selectionStart;
-  let end = editor.selectionEnd;
-
-  // 行ブロックの開始・終了
-  const blockStart = value.lastIndexOf("\n", start - 1) + 1;
-  let blockEnd = value.indexOf("\n", end);
-  if (blockEnd === -1) blockEnd = value.length;
-
-  const lines = value.slice(blockStart, blockEnd).split("\n");
-
-  // 上へ移動
-  if (direction === -1) {
-    if (blockStart === 0) return;
-
-    const prevLineStart = value.lastIndexOf("\n", blockStart - 2) + 1;
-    const prevLineEnd = blockStart - 1;
-    const prevLine = value.slice(prevLineStart, prevLineEnd);
-
-    const newValue =
-      value.slice(0, prevLineStart) +
-      lines.join("\n") + "\n" +
-      prevLine +
-      value.slice(blockEnd);
-
-    editor.value = newValue;
-
-    const newStart = prevLineStart;
-    const newEnd = newStart + blockEnd - blockStart;
-    editor.setSelectionRange(newStart, newEnd);
-  }
-
-  // 下へ移動
-  if (direction === 1) {
-    if (blockEnd === value.length) return;
-
-    const nextLineStart = blockEnd + 1;
-    let nextLineEnd = value.indexOf("\n", nextLineStart);
-    if (nextLineEnd === -1) nextLineEnd = value.length;
-    const nextLine = value.slice(nextLineStart, nextLineEnd);
-
-    const newValue =
-      value.slice(0, blockStart) +
-      nextLine + "\n" +
-      lines.join("\n") +
-      value.slice(nextLineEnd);
-
-    editor.value = newValue;
-
-    const newStart = blockStart + nextLine.length + 1;
-    const newEnd = newStart + blockEnd - blockStart;
-    editor.setSelectionRange(newStart, newEnd);
-  }
-}

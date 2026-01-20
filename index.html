@@ -1,23 +1,22 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My Memo</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Markdown Memo</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <button id="login">Login</button>
-	<div id="toolbar">
-	  <button data-action="indent">→</button>
-	  <button data-action="outdent">←</button>
-	  <button data-action="up">↑</button>
-	  <button data-action="down">↓</button>
-	</div>
-  <div id="editor" contenteditable="true"></div>
-  <div id="preview"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script type="module" src="app.js"></script>
+<div id="toolbar">
+  <button data-action="indent">→</button>
+  <button data-action="outdent">←</button>
+  <button data-action="up">↑</button>
+  <button data-action="down">↓</button>
+</div>
+
+<div id="editor" contenteditable="true"></div>
+
+<script type="module" src="app.js"></script>
 </body>
 </html>
