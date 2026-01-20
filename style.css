@@ -1,25 +1,7 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 #editor {
   height: 100vh;
-}
-
-/* CodeMirror 本体 */
-.cm-editor {
-  height: 100%;
-  font-family: monospace;
-  font-size: 15px;
-}
-
-/* 折り返しを有効化 */
-.cm-content {
-  white-space: pre-wrap;
-}
-
-/* iPhone向け読みやすさ */
-.cm-line {
-  line-height: 1.6;
 }
