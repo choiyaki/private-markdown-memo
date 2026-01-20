@@ -12,6 +12,40 @@ const loginBtn = document.getElementById("login");
 
 loginBtn.onclick = login;
 
+editor.addEventListener("keydown", e => {
+  // IME変換中は何もしない（超重要）
+  if (e.isComposing) return;
+
+  // Enterキー以外は無視
+  if (e.key !== "Enter") return;
+
+  const pos = editor.selectionStart;
+  const text = editor.value;
+
+  // 現在行を取得
+  const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+  const line = text.slice(lineStart, pos);
+
+  // 箇条書き判定
+  const m = line.match(/^(\s*)([-*+]|\d+\.)\s+/);
+  if (!m) return;
+
+  // 行が記号だけなら補完しない（- → 改行で終了）
+  if (line.trim() === m[0].trim()) return;
+
+  e.preventDefault();
+
+  const indent = m[1];
+  const marker = m[2] + " ";
+
+  editor.setRangeText(
+    "\n" + indent + marker,
+    pos,
+    pos,
+    "end"
+  );
+});
+
 onAuthStateChanged(auth, user => {
   if (!user) return;
 	
