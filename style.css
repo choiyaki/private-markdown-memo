@@ -46,6 +46,14 @@ textarea {
 }
 
 #editor {
-  padding-left: 2.5em;
-  text-indent: -2.5em;
+  white-space: pre-wrap;
+  outline: none;
+  font-family: monospace;
+}
+
+/* Markdown風ハンギングインデント */
+#editor div,
+#editor p {
+  padding-left: 2em;
+  text-indent: -2em;
 }

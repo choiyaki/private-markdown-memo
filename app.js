@@ -12,13 +12,14 @@ const loginBtn = document.getElementById("login");
 
 loginBtn.onclick = login;
 
+
 function saveNow() {
   if (!auth.currentUser) return;
 
   setDoc(
     doc(db, "users", auth.currentUser.uid, "memo", "main"),
     {
-      content: editor.value,
+      content: editor.innerText,
       updatedAt: serverTimestamp()
     }
   );
@@ -70,7 +71,8 @@ onAuthStateChanged(auth, user => {
   if (!snap.exists()) return;
   if (isEditing) return; // ← ここが核心
 
-  editor.value = snap.data().content;
+  //editor.value = snap.data().content;
+	editor.innerText = docSnap.data().content;
 });
 
   editor.oninput = debounce(() => {
