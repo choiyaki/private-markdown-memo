@@ -1,11 +1,11 @@
-const editor = CodeMirror.fromTextArea(
+const cm = CodeMirror.fromTextArea(
   document.getElementById("editor"),
   {
     mode: "markdown",
     lineWrapping: true,
     lineNumbers: false,
-    tabSize: 2,
     indentUnit: 2,
+    tabSize: 2,
     extraKeys: {
       Tab(cm) {
         cm.execCommand("insertSoftTab");
@@ -17,8 +17,8 @@ const editor = CodeMirror.fromTextArea(
   }
 );
 
-/* 初期テキスト */
-editor.setValue(`- ああああああああああああ
+cm.setValue(`- ああああああああああああ
 - いいいいいいいいいいいい
-  - インデントされた行が長くなっても自然に揃います
+  - インデントされた行が長くなっても
+    自然に揃います
 `);
