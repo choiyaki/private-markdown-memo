@@ -108,26 +108,56 @@ function getLines() {
   return { value, start, end, lineStart, lineEnd };
 }
 
-/* インデント（2スペース） */
+/* インデント */
 function indent() {
-  const { value, lineStart, lineEnd } = getLines();
+  const value = editor.value;
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const lineEnd =
+    value.indexOf("\n", end) === -1
+      ? value.length
+      : value.indexOf("\n", end);
+
   const lines = value.slice(lineStart, lineEnd).split("\n");
 
-  const indented = lines.map(l => "\t" + l).join("\n");
+  const result = lines.map(l => "\t" + l).join("\n");
 
-  editor.setRangeText(indented, lineStart, lineEnd, "end");
+  editor.setRangeText(result, lineStart, lineEnd, "end");
+
+  // カーソル・選択を自然に維持
+  editor.selectionStart = start + 1;
+  editor.selectionEnd = end + lines.length;
 }
 
 /* アウトデント */
 function outdent() {
-  const { value, lineStart, lineEnd } = getLines();
+  const value = editor.value;
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const lineEnd =
+    value.indexOf("\n", end) === -1
+      ? value.length
+      : value.indexOf("\n", end);
+
   const lines = value.slice(lineStart, lineEnd).split("\n");
 
-  const outdented = lines
-    .map(l => l.startsWith("\t") ? l.slice(2) : l)
-    .join("\n");
+  let removed = 0;
+  const result = lines.map(l => {
+    if (l.startsWith("\t")) {
+      removed += 1;
+      return l.slice(1);
+    }
+    return l;
+  }).join("\n");
 
-  editor.setRangeText(outdented, lineStart, lineEnd, "end");
+  editor.setRangeText(result, lineStart, lineEnd, "end");
+
+  editor.selectionStart = Math.max(start - 1, lineStart);
+  editor.selectionEnd = Math.max(end - removed, editor.selectionStart);
 }
 
 /* 行を上下に移動 */
