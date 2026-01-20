@@ -12,6 +12,9 @@ loginBtn.onclick = login;
 
 onAuthStateChanged(auth, user => {
   if (!user) return;
+	
+	loginBtn.style.display = "none";
+	editor.focus();
 
   const ref = doc(db, "users", user.uid, "memo", "main");
 
