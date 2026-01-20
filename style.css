@@ -3,33 +3,21 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-#toolbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  background: #eee;
-  border-top: 1px solid #ccc;
-}
-
-#toolbar button {
-  flex: 1;
-  font-size: 18px;
-  padding: 10px;
-}
-
+/* エディタ全体 */
 #editor {
   padding: 16px;
-  padding-bottom: 70px;
   min-height: 100vh;
+}
+
+/* 1行 = 1 div */
+.line {
   white-space: pre-wrap;
   outline: none;
   font-family: monospace;
+  font-size: 15px;
+  line-height: 1.6;
 
-  /* ハンギングインデント風 */
+  /* ハンギングインデント */
   padding-left: 2.5em;
   text-indent: -2.5em;
-
-  tab-size: 2;
 }

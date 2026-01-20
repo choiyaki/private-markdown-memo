@@ -8,15 +8,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
   getAuth,
-  signInWithPopup,
+  onAuthStateChanged,
   GoogleAuthProvider,
-  onAuthStateChanged
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* Firebase config（あなたのものに置き換え） */
+/* ========= Firebase 設定（自分のに置き換え） ========= */
 const firebaseConfig = {
-  /* ... */
+  /* your config */
 };
+/* ==================================================== */
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -24,8 +25,35 @@ const auth = getAuth(app);
 
 const editor = document.getElementById("editor");
 
-let isEditing = false;
-let debounceTimer = null;
+let isRendering = false;
+let saveTimer = null;
+
+/* ---------- 行DOMを描画 ---------- */
+
+function renderLines(text) {
+  isRendering = true;
+  editor.innerHTML = "";
+
+  const lines = text.split("\n");
+
+  lines.forEach(lineText => {
+    const div = document.createElement("div");
+    div.className = "line";
+    div.contentEditable = "true";
+    div.innerText = lineText || "";
+    editor.appendChild(div);
+  });
+
+  isRendering = false;
+}
+
+/* ---------- 行DOM → テキスト ---------- */
+
+function collectText() {
+  return Array.from(editor.children)
+    .map(line => line.innerText)
+    .join("\n");
+}
 
 /* ---------- 保存 ---------- */
 
@@ -35,23 +63,24 @@ function saveNow() {
   setDoc(
     doc(db, "users", auth.currentUser.uid, "memo", "main"),
     {
-      content: editor.innerText,
+      content: collectText(),
       updatedAt: serverTimestamp()
     }
   );
 }
 
-/* debounce 保存 */
+/* ---------- 入力監視（debounce 保存） ---------- */
+
 editor.addEventListener("input", () => {
-  isEditing = true;
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
+  if (isRendering) return;
+
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
     saveNow();
-    isEditing = false;
   }, 500);
 });
 
-/* ---------- Firestore 読み込み ---------- */
+/* ---------- 認証 & Firestore 読み込み ---------- */
 
 onAuthStateChanged(auth, user => {
   if (!user) {
@@ -63,67 +92,9 @@ onAuthStateChanged(auth, user => {
     doc(db, "users", user.uid, "memo", "main"),
     snap => {
       if (!snap.exists()) return;
-      if (isEditing) return;
+      if (isRendering) return;
 
-      editor.innerText = snap.data().content || "";
+      renderLines(snap.data().content || "");
     }
   );
-});
-
-/* ---------- エディタ操作 ---------- */
-
-function indent() {
-  document.execCommand("insertText", false, "\t");
-}
-
-function outdent() {
-  const sel = window.getSelection();
-  if (!sel.rangeCount) return;
-
-  const range = sel.getRangeAt(0);
-  const text = range.startContainer.textContent;
-  const offset = range.startOffset;
-
-  if (offset > 0 && text[offset - 1] === "\t") {
-    range.startContainer.textContent =
-      text.slice(0, offset - 1) + text.slice(offset);
-    range.setStart(range.startContainer, offset - 1);
-    range.collapse(true);
-  }
-}
-
-function moveLines(direction) {
-  const text = editor.innerText;
-  const lines = text.split("\n");
-
-  const sel = window.getSelection();
-  const pos = sel.anchorOffset;
-
-  let lineIndex = text.slice(0, pos).split("\n").length - 1;
-
-  if (direction === -1 && lineIndex === 0) return;
-  if (direction === 1 && lineIndex === lines.length - 1) return;
-
-  const target = direction === -1 ? lineIndex - 1 : lineIndex + 1;
-  [lines[lineIndex], lines[target]] = [lines[target], lines[lineIndex]];
-
-  editor.innerText = lines.join("\n");
-
-  saveNow();
-}
-
-/* ---------- ツールバー ---------- */
-
-document.querySelectorAll("#toolbar button").forEach(btn => {
-  btn.onclick = () => {
-    const action = btn.dataset.action;
-
-    if (action === "indent") indent();
-    if (action === "outdent") outdent();
-    if (action === "up") moveLines(-1);
-    if (action === "down") moveLines(1);
-
-    saveNow();
-    editor.focus();
-  };
 });
