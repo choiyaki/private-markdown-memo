@@ -46,5 +46,6 @@ textarea {
 }
 
 #editor {
-  tab-size: 2;
+  padding-left: 2.5em;
+  text-indent: -2.5em;
 }
