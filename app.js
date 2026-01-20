@@ -1,95 +1,55 @@
-/* =========================
-   CodeMirror 6
-========================= */
-import { EditorState } from "https://unpkg.com/@codemirror/state@6.4.1/dist/index.js";
-import { EditorView } from "https://unpkg.com/@codemirror/view@6.24.1/dist/index.js";
-import { markdown } from "https://unpkg.com/@codemirror/lang-markdown@6.2.5/dist/index.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { EditorView, basicSetup } from "https://codemirror.net/6/codemirror.js";
+import { EditorState } from "https://codemirror.net/6/state.js";
 
-/* =========================
-   Firebase
-========================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-/* 🔧 Firebase config（差し替え） */
+// --- 1. Firebaseの設定 (あなたのコンソールからコピーした内容に書き換えてください) ---
 const firebaseConfig = {
   apiKey: "AIzaSyA9Mt2PRiF-s6vHj7BG-oQnZObzC5iKMLc",
   authDomain: "private-markdown-memo.firebaseapp.com",
   projectId: "private-markdown-memo",
-  appId: "1:832564619748:web:065b0a87cf25ec070cbff1"
+  storageBucket: "private-markdown-memo.firebasestorage.app",
+  messagingSenderId: "832564619748",
+  appId: "1:832564619748:web:065b0a87cf25ec070cbff1",
+  measurementId: "G-QGLB3CD3Y3"
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const db = getDatabase(app);
+const memoRef = ref(db, 'shared_memo/text');
 
-/* =========================
-   Editor
-========================= */
-let view = null;
-let docRef = null;
-let ready = false;
+// --- 2. CodeMirrorの初期化 ---
+let isRemoteUpdate = false; // ループ防止フラグ
 
-function createEditor(content) {
-  const state = EditorState.create({
-    doc: content,
+const editor = new EditorView({
+    doc: "",
     extensions: [
-      markdown(),
-      EditorView.lineWrapping
-    ]
-  });
-
-  view = new EditorView({
-    state,
+        basicSetup,
+        EditorView.updateListener.of((update) => {
+            // ユーザーが自分で入力した時だけFirebaseに保存
+            if (update.docChanged && !isRemoteUpdate) {
+                const newText = update.state.doc.toString();
+                set(memoRef, newText);
+            }
+        })
+    ],
     parent: document.getElementById("editor")
-  });
-}
-
-/* =========================
-   Login
-========================= */
-const loginBtn = document.getElementById("loginBtn");
-
-loginBtn.onclick = async () => {
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-};
-
-/* =========================
-   Auth → Load data
-========================= */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
-
-  loginBtn.style.display = "none";
-
-  docRef = doc(db, "users", user.uid, "memo", "main");
-  const snap = await getDoc(docRef);
-
-  const content = snap.exists() ? snap.data().content : "";
-  createEditor(content);
-
-  ready = true;
 });
 
-/* =========================
-   Save (manual autosave)
-========================= */
-setInterval(async () => {
-  if (!ready || !view || !docRef) return;
-
-  await setDoc(docRef, {
-    content: view.state.doc.toString()
-  });
-}, 1000);
+// --- 3. Firebaseからのデータ同期受信 ---
+onValue(memoRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data !== null) {
+        const currentText = editor.state.doc.toString();
+        
+        // ローカルの内容と異なる場合のみ反映
+        if (data !== currentText) {
+            isRemoteUpdate = true; // 更新中にupdateListenerが反応しないようにする
+            editor.dispatch({
+                changes: { from: 0, to: currentText.length, insert: data }
+            });
+            isRemoteUpdate = false;
+        }
+    }
+    document.getElementById("status").innerText = "同期済み";
+});
