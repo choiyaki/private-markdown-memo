@@ -1,32 +1,27 @@
-/* 全体のはみ出し防止 */
 * {
   box-sizing: border-box;
 }
 
-/* 画面幅いっぱいに */
-body {
+html, body {
   margin: 0;
-  padding: 8px;
-  max-width: 100%;
+  padding: 0;
+  width: 100%;
 }
 
-/* エディタ */
+body {
+  padding: 8px;
+  font-family: system-ui;
+}
+
 textarea {
+  display: block;
   width: 100%;
   max-width: 100%;
   min-height: 40vh;
-  font-size: 16px; /* iOSズーム防止 */
-}
-
-@media (min-width: 768px) {
-  body {
-    max-width: 720px;
-    margin: auto;
-  }
+  font-size: 16px;
 }
 
 #preview {
-  max-width: 100%;
+  width: 100%;
   overflow-wrap: break-word;
-  word-break: break-word;
 }
