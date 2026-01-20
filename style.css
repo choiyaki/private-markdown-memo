@@ -9,7 +9,6 @@ body {
   line-height: 1.6;
 }
 
-/* 折り返し時に文頭を揃える */
 .CodeMirror pre {
   white-space: pre-wrap;
   word-break: break-word;
