@@ -1,7 +1,7 @@
-import { EditorState } from "https://esm.sh/@codemirror/state";
-import { EditorView, keymap, lineNumbers } from "https://esm.sh/@codemirror/view";
-import { defaultKeymap, indentWithTab, moveLineUp, moveLineDown } from "https://esm.sh/@codemirror/commands";
-import { markdown } from "https://esm.sh/@codemirror/lang-markdown";
+import { EditorState } from "https://unpkg.com/@codemirror/state@6.4.1/dist/index.js";
+import { EditorView, keymap } from "https://unpkg.com/@codemirror/view@6.24.1/dist/index.js";
+import { defaultKeymap, indentWithTab } from "https://unpkg.com/@codemirror/commands@6.3.3/dist/index.js";
+import { markdown } from "https://unpkg.com/@codemirror/lang-markdown@6.2.5/dist/index.js";
 
 /* 初期テキスト */
 const startDoc = `- ああああああああああああ
@@ -15,7 +15,6 @@ const state = EditorState.create({
   doc: startDoc,
   extensions: [
     markdown(),
-    lineNumbers(),
     keymap.of([
       indentWithTab,
       ...defaultKeymap
@@ -24,10 +23,7 @@ const state = EditorState.create({
 });
 
 /* エディタ生成 */
-const view = new EditorView({
+new EditorView({
   state,
   parent: document.getElementById("editor")
 });
-
-/* グローバルに触れるように（デバッグ用） */
-window.view = view;

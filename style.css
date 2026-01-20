@@ -3,24 +3,23 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* CodeMirror 全体 */
 #editor {
   height: 100vh;
 }
 
-/* エディタ本体 */
+/* CodeMirror 本体 */
 .cm-editor {
   height: 100%;
   font-family: monospace;
   font-size: 15px;
 }
 
-/* 行の折り返しを自然に */
+/* 折り返しを有効化 */
 .cm-content {
   white-space: pre-wrap;
 }
 
-/* iPhoneでのタップ安定化 */
+/* iPhone向け読みやすさ */
 .cm-line {
   line-height: 1.6;
 }
