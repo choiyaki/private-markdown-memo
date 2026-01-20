@@ -1,26 +1,16 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Markdown Memo</title>
-
-  <!-- CodeMirror 5 -->
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CM6 Firebase Editor</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<textarea id="editor"></textarea>
+<button id="loginBtn">Login</button>
+<div id="editor"></div>
 
-<!-- CodeMirror -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
-
-<!-- Firebase v9 (compat は使わない) -->
-<script type="module" src="app.js?v=1"></script>
-
+<script type="module" src="app.js"></script>
 </body>
 </html>

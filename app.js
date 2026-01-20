@@ -1,94 +1,95 @@
+/* =========================
+   CodeMirror 6
+========================= */
+import { EditorState } from "https://unpkg.com/@codemirror/state@6.4.1/dist/index.js";
+import { EditorView } from "https://unpkg.com/@codemirror/view@6.24.1/dist/index.js";
+import { markdown } from "https://unpkg.com/@codemirror/lang-markdown@6.2.5/dist/index.js";
+
+/* =========================
+   Firebase
+========================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
   getFirestore,
   doc,
   getDoc,
-  setDoc,
-  serverTimestamp
+  setDoc
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-/* 🔧 Firebase設定（自分のものに差し替え） */
+/* 🔧 Firebase config（差し替え） */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  apiKey: "AIzaSyA9Mt2PRiF-s6vHj7BG-oQnZObzC5iKMLc",
+  authDomain: "private-markdown-memo.firebaseapp.com",
+  projectId: "private-markdown-memo",
+  appId: "1:832564619748:web:065b0a87cf25ec070cbff1"
 };
 
-/* Firebase 初期化 */
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-/* CodeMirror 初期化 */
-const cm = CodeMirror.fromTextArea(
-  document.getElementById("editor"),
-  {
-    mode: "markdown",
-    lineWrapping: true,
-    indentUnit: 2,
-    tabSize: 2,
-    extraKeys: {
-      Tab(cm) {
-        cm.execCommand("insertSoftTab");
-      },
-      "Shift-Tab"(cm) {
-        cm.execCommand("indentLess");
-      }
-    }
-  }
-);
-
-/* ===== 状態管理 ===== */
+/* =========================
+   Editor
+========================= */
+let view = null;
 let docRef = null;
-let saveTimer = null;
-let isReady = false;   // ← ★ Firestore 読み込み完了フラグ
+let ready = false;
 
-/* autosave（準備完了後のみ） */
-function scheduleSave() {
-  if (!isReady || !docRef) return;
+function createEditor(content) {
+  const state = EditorState.create({
+    doc: content,
+    extensions: [
+      markdown(),
+      EditorView.lineWrapping
+    ]
+  });
 
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    await setDoc(
-      docRef,
-      {
-        content: cm.getValue(),
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-  }, 500);
+  view = new EditorView({
+    state,
+    parent: document.getElementById("editor")
+  });
 }
 
-/* 入力検知 */
-cm.on("change", () => {
-  if (!isReady) return;
-  scheduleSave();
-});
+/* =========================
+   Login
+========================= */
+const loginBtn = document.getElementById("loginBtn");
 
-/* 認証 & 初回読み込み */
+loginBtn.onclick = async () => {
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
+};
+
+/* =========================
+   Auth → Load data
+========================= */
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
+  loginBtn.style.display = "none";
+
   docRef = doc(db, "users", user.uid, "memo", "main");
-
   const snap = await getDoc(docRef);
-  if (snap.exists()) {
-    cm.setValue(snap.data().content || "");
-  } else {
-    cm.setValue("");
-  }
 
-  isReady = true; // ← ★ ここで初めて保存OK
+  const content = snap.exists() ? snap.data().content : "";
+  createEditor(content);
+
+  ready = true;
 });
 
-/* 匿名ログイン */
-signInAnonymously(auth);
+/* =========================
+   Save (manual autosave)
+========================= */
+setInterval(async () => {
+  if (!ready || !view || !docRef) return;
+
+  await setDoc(docRef, {
+    content: view.state.doc.toString()
+  });
+}, 1000);
