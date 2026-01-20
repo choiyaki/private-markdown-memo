@@ -3,6 +3,8 @@ import { doc, setDoc, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+	
+let isEditing = false;
 
 const editor = document.getElementById("editor");
 const preview = document.getElementById("preview");
@@ -19,11 +21,11 @@ onAuthStateChanged(auth, user => {
   const ref = doc(db, "users", user.uid, "memo", "main");
 
   onSnapshot(ref, snap => {
-    if (snap.exists()) {
-      editor.value = snap.data().content;
-      preview.innerHTML = marked.parse(editor.value);
-    }
-  });
+  if (!snap.exists()) return;
+  if (isEditing) return; // ← ここが核心
+
+  editor.value = snap.data().content;
+});
 
   editor.oninput = debounce(() => {
     setDoc(ref, {
@@ -42,23 +44,40 @@ function debounce(fn, ms) {
   };
 }
 
+editor.addEventListener("input", () => {
+  isEditing = true;
+});
+
 
 document.querySelectorAll("#toolbar button").forEach(btn => {
   btn.onclick = () => {
-    insertText(btn.dataset.insert);
+    wrapText(btn.dataset.insert);
   };
 });
 
-function insertText(text) {
+function wrapText(mark) {
   const start = editor.selectionStart;
   const end = editor.selectionEnd;
+  const selected = editor.value.slice(start, end);
 
-  editor.setRangeText(
-    text,
-    start,
-    end,
-    "end"
-  );
+  if (selected) {
+    // 選択文字を囲む
+    editor.setRangeText(
+      mark + selected + mark,
+      start,
+      end,
+      "end"
+    );
+  } else {
+    // 空の場合：カーソルを中央に
+    editor.setRangeText(
+      mark + mark,
+      start,
+      end,
+      "end"
+    );
+    editor.selectionStart = editor.selectionEnd = start + mark.length;
+  }
 
   editor.focus();
 }
