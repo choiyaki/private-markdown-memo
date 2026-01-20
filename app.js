@@ -12,15 +12,14 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-/* 🔧 Firebase設定（差し替え） */
+/* 🔧 Firebase設定（自分のものに差し替え） */
 const firebaseConfig = {
-  apiKey: "AIzaSyA9Mt2PRiF-s6vHj7BG-oQnZObzC5iKMLc",
-  authDomain: "private-markdown-memo.firebaseapp.com",
-  projectId: "private-markdown-memo",
-  storageBucket: "private-markdown-memo.firebasestorage.app",
-  messagingSenderId: "832564619748",
-  appId: "1:832564619748:web:065b0a87cf25ec070cbff1",
-  measurementId: "G-QGLB3CD3Y3"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
 };
 
 /* Firebase 初期化 */
@@ -47,14 +46,14 @@ const cm = CodeMirror.fromTextArea(
   }
 );
 
-/* 状態管理 */
-let isEditing = false;
-let saveTimer = null;
+/* ===== 状態管理 ===== */
 let docRef = null;
+let saveTimer = null;
+let isReady = false;   // ← ★ Firestore 読み込み完了フラグ
 
-/* autosave */
+/* autosave（準備完了後のみ） */
 function scheduleSave() {
-  if (!docRef) return;
+  if (!isReady || !docRef) return;
 
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
@@ -66,13 +65,12 @@ function scheduleSave() {
       },
       { merge: true }
     );
-    isEditing = false;
   }, 500);
 }
 
 /* 入力検知 */
 cm.on("change", () => {
-  isEditing = true;
+  if (!isReady) return;
   scheduleSave();
 });
 
@@ -88,6 +86,8 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     cm.setValue("");
   }
+
+  isReady = true; // ← ★ ここで初めて保存OK
 });
 
 /* 匿名ログイン */
