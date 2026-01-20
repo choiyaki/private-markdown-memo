@@ -44,3 +44,7 @@ textarea {
   border-radius: 6px;
   background: #fff;
 }
+
+#editor {
+  tab-size: 2;
+}
