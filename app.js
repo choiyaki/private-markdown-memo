@@ -12,6 +12,18 @@ const loginBtn = document.getElementById("login");
 
 loginBtn.onclick = login;
 
+function saveNow() {
+  if (!auth.currentUser) return;
+
+  setDoc(
+    doc(db, "users", auth.currentUser.uid, "memo", "main"),
+    {
+      content: editor.value,
+      updatedAt: serverTimestamp()
+    }
+  );
+}
+
 editor.addEventListener("keydown", e => {
   // IME変換中は何もしない（超重要）
   if (e.isComposing) return;
@@ -62,13 +74,9 @@ onAuthStateChanged(auth, user => {
 });
 
   editor.oninput = debounce(() => {
-    setDoc(ref, {
-      content: editor.value,
-      updatedAt: serverTimestamp()
-    });
-    preview.innerHTML = marked.parse(editor.value);
-  }, 400);
-});
+	  saveNow();
+	}, 500);
+	});
 
 function debounce(fn, ms) {
   let t;
@@ -90,7 +98,9 @@ document.querySelectorAll("#toolbar button").forEach(btn => {
     if (action === "outdent") outdent();
     if (action === "up") moveLine(-1);
     if (action === "down") moveLine(1);
-    editor.focus();
+    
+		saveNow(); 
+		editor.focus();
   };
 });
 
