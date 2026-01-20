@@ -15,6 +15,7 @@ const state = EditorState.create({
   doc: startDoc,
   extensions: [
     markdown(),
+    EditorView.lineWrapping, // ← ★ これを追加
     keymap.of([
       indentWithTab,
       ...defaultKeymap
