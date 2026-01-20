@@ -41,3 +41,24 @@ function debounce(fn, ms) {
     t = setTimeout(fn, ms);
   };
 }
+
+
+document.querySelectorAll("#toolbar button").forEach(btn => {
+  btn.onclick = () => {
+    insertText(btn.dataset.insert);
+  };
+});
+
+function insertText(text) {
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+
+  editor.setRangeText(
+    text,
+    start,
+    end,
+    "end"
+  );
+
+  editor.focus();
+}

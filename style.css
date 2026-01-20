@@ -27,3 +27,22 @@ textarea {
   overflow-wrap: break-word;
 }
 */
+
+#toolbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: #f0f0f0;
+  z-index: 10;
+}
+
+#toolbar button {
+  flex: 1;
+  font-size: 16px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 6px;
+  background: #fff;
+}
