@@ -21,12 +21,10 @@ textarea {
   font-size: 16px;
 }
 
-/*
 #preview {
-  width: 100%;
-  overflow-wrap: break-word;
+  display: none;
 }
-*/
+
 
 #toolbar {
   position: sticky;
