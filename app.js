@@ -99,7 +99,9 @@ document.querySelectorAll("#toolbar button").forEach(btn => {
     if (action === "up") moveLine(-1);
     if (action === "down") moveLine(1);
     
-		saveNow(); 
+		isEditing = true;
+		saveNow();
+		isEditing = false;
 		editor.focus();
   };
 });
@@ -172,28 +174,58 @@ function outdent() {
 }
 
 /* 行を上下に移動 */
-function moveLine(dir) {
+function moveLines(direction) {
   const value = editor.value;
-  const pos = editor.selectionStart;
+  let start = editor.selectionStart;
+  let end = editor.selectionEnd;
 
-  const lines = value.split("\n");
+  // 行ブロックの開始・終了
+  const blockStart = value.lastIndexOf("\n", start - 1) + 1;
+  let blockEnd = value.indexOf("\n", end);
+  if (blockEnd === -1) blockEnd = value.length;
 
-  let row = value.slice(0, pos).split("\n").length - 1;
-  const target = row + dir;
+  const lines = value.slice(blockStart, blockEnd).split("\n");
 
-  if (target < 0 || target >= lines.length) return;
+  // 上へ移動
+  if (direction === -1) {
+    if (blockStart === 0) return;
 
-  // swap
-  [lines[row], lines[target]] = [lines[target], lines[row]];
+    const prevLineStart = value.lastIndexOf("\n", blockStart - 2) + 1;
+    const prevLineEnd = blockStart - 1;
+    const prevLine = value.slice(prevLineStart, prevLineEnd);
 
-  editor.value = lines.join("\n");
+    const newValue =
+      value.slice(0, prevLineStart) +
+      lines.join("\n") + "\n" +
+      prevLine +
+      value.slice(blockEnd);
 
-  // カーソル行を維持
-  const col = pos - value.lastIndexOf("\n", pos - 1) - 1;
-  let newPos = 0;
-  for (let i = 0; i < target; i++) {
-    newPos += lines[i].length + 1;
+    editor.value = newValue;
+
+    const newStart = prevLineStart;
+    const newEnd = newStart + blockEnd - blockStart;
+    editor.setSelectionRange(newStart, newEnd);
   }
-  editor.selectionStart = editor.selectionEnd =
-    newPos + Math.min(col, lines[target].length);
+
+  // 下へ移動
+  if (direction === 1) {
+    if (blockEnd === value.length) return;
+
+    const nextLineStart = blockEnd + 1;
+    let nextLineEnd = value.indexOf("\n", nextLineStart);
+    if (nextLineEnd === -1) nextLineEnd = value.length;
+    const nextLine = value.slice(nextLineStart, nextLineEnd);
+
+    const newValue =
+      value.slice(0, blockStart) +
+      nextLine + "\n" +
+      lines.join("\n") +
+      value.slice(nextLineEnd);
+
+    editor.value = newValue;
+
+    const newStart = blockStart + nextLine.length + 1;
+    const newEnd = newStart + blockEnd - blockStart;
+    editor.setSelectionRange(newStart, newEnd);
+  }
 }
