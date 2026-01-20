@@ -1,59 +1,65 @@
-// CDN経由で確実に読み込めるURLに変更します
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-// CodeMirror関連をesm.shからインポート
+// Firestore用のインポート
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { EditorView, basicSetup } from "https://esm.sh/codemirror";
-import { EditorState } from "https://esm.sh/@codemirror/state";
 
-
-// --- 1. Firebaseの設定 (あなたのコンソールからコピーした内容に書き換えてください) ---
+// --- 1. Firebase設定 ---
 const firebaseConfig = {
-  apiKey: "AIzaSyA9Mt2PRiF-s6vHj7BG-oQnZObzC5iKMLc",
-  authDomain: "private-markdown-memo.firebaseapp.com",
-  projectId: "private-markdown-memo",
-  storageBucket: "private-markdown-memo.firebasestorage.app",
-  messagingSenderId: "832564619748",
-  appId: "1:832564619748:web:065b0a87cf25ec070cbff1",
-  measurementId: "G-QGLB3CD3Y3"
+    apiKey: "...",
+    authDomain: "...",
+    projectId: "...",
+    // Firestoreの場合、databaseURLは不要ですが、あっても問題ありません
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const memoRef = ref(db, 'shared_memo/text');
+const db = getFirestore(app);
+const docRef = doc(db, "memos", "my-memo"); // 「memos」コレクションの「my-memo」という書類
 
 // --- 2. CodeMirrorの初期化 ---
-let isRemoteUpdate = false; // ループ防止フラグ
+let isRemoteUpdate = false;
+let timeoutId = null;
 
 const editor = new EditorView({
     doc: "",
     extensions: [
         basicSetup,
         EditorView.updateListener.of((update) => {
-            // ユーザーが自分で入力した時だけFirebaseに保存
             if (update.docChanged && !isRemoteUpdate) {
-                const newText = update.state.doc.toString();
-                set(memoRef, newText);
+                // 【デバウンス処理】入力が止まって1秒後に送信
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    const newText = update.state.doc.toString();
+                    saveToFirestore(newText);
+                }, 1000); 
             }
         })
     ],
     parent: document.getElementById("editor")
 });
 
-// --- 3. Firebaseからのデータ同期受信 ---
-onValue(memoRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data !== null) {
+// 保存処理
+async function saveToFirestore(content) {
+    try {
+        await setDoc(docRef, { text: content, updatedAt: new Date() });
+        document.getElementById("status").innerText = "保存完了";
+    } catch (e) {
+        console.error("保存失敗:", e);
+    }
+}
+
+// --- 3. Firestoreからの読み込み ---
+onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+        const data = docSnap.data().text;
         const currentText = editor.state.doc.toString();
-        
-        // ローカルの内容と異なる場合のみ反映
+
         if (data !== currentText) {
-            isRemoteUpdate = true; // 更新中にupdateListenerが反応しないようにする
+            isRemoteUpdate = true;
             editor.dispatch({
                 changes: { from: 0, to: currentText.length, insert: data }
             });
             isRemoteUpdate = false;
+            document.getElementById("status").innerText = "同期済み";
         }
     }
-    document.getElementById("status").innerText = "同期済み";
 });
