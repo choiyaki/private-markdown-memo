@@ -92,18 +92,19 @@ editor.addEventListener("input", () => {
 
 
 document.querySelectorAll("#toolbar button").forEach(btn => {
-	btn.onclick = () => {
-	  const action = btn.dataset.action;
-	
-	  if (action === "up") moveLines(-1);
-	  if (action === "down") moveLines(1);
-	  if (action === "indent") indent();
-	  if (action === "outdent") outdent();
-	
-	  saveNow();
-	  editor.focus();
-	};
+  btn.onclick = () => {
+    const action = btn.dataset.action;
+
+    if (action === "up") moveLines(-1);
+    if (action === "down") moveLines(1);
+    if (action === "indent") indent();
+    if (action === "outdent") outdent();
+
+    saveNow();
+    editor.focus();
+  };
 });
+
 
 function getLines() {
   const value = editor.value;
