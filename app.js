@@ -113,7 +113,7 @@ function indent() {
   const { value, lineStart, lineEnd } = getLines();
   const lines = value.slice(lineStart, lineEnd).split("\n");
 
-  const indented = lines.map(l => "  " + l).join("\n");
+  const indented = lines.map(l => "\t" + l).join("\n");
 
   editor.setRangeText(indented, lineStart, lineEnd, "end");
 }
@@ -124,7 +124,7 @@ function outdent() {
   const lines = value.slice(lineStart, lineEnd).split("\n");
 
   const outdented = lines
-    .map(l => l.startsWith("  ") ? l.slice(2) : l)
+    .map(l => l.startsWith("\t") ? l.slice(2) : l)
     .join("\n");
 
   editor.setRangeText(outdented, lineStart, lineEnd, "end");
@@ -135,45 +135,24 @@ function moveLine(dir) {
   const value = editor.value;
   const pos = editor.selectionStart;
 
-  const start = value.lastIndexOf("\n", pos - 1) + 1;
-  const end =
-    value.indexOf("\n", pos) === -1
-      ? value.length
-      : value.indexOf("\n", pos);
+  const lines = value.split("\n");
 
-  const line = value.slice(start, end);
+  let row = value.slice(0, pos).split("\n").length - 1;
+  const target = row + dir;
 
-  const before = value.slice(0, start);
-  const after = value.slice(end + 1);
+  if (target < 0 || target >= lines.length) return;
 
-  const prevEnd = before.lastIndexOf("\n", before.length - 2);
-  const nextStart = after.indexOf("\n");
+  // swap
+  [lines[row], lines[target]] = [lines[target], lines[row]];
 
-  if (dir === -1 && prevEnd >= 0) {
-    // 上へ
-    const prevStart = before.lastIndexOf("\n", prevEnd - 1) + 1;
-    const prevLine = before.slice(prevStart, prevEnd);
+  editor.value = lines.join("\n");
 
-    editor.value =
-      value.slice(0, prevStart) +
-      line + "\n" +
-      prevLine +
-      value.slice(end);
-
-    editor.selectionStart = editor.selectionEnd = prevStart;
+  // カーソル行を維持
+  const col = pos - value.lastIndexOf("\n", pos - 1) - 1;
+  let newPos = 0;
+  for (let i = 0; i < target; i++) {
+    newPos += lines[i].length + 1;
   }
-
-  if (dir === 1 && nextStart !== -1) {
-    // 下へ
-    const nextLine = after.slice(0, nextStart);
-
-    editor.value =
-      before +
-      nextLine + "\n" +
-      line +
-      after.slice(nextStart);
-
-    editor.selectionStart = editor.selectionEnd =
-      before.length + nextLine.length + 1;
-  }
+  editor.selectionStart = editor.selectionEnd =
+    newPos + Math.min(col, lines[target].length);
 }
