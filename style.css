@@ -3,21 +3,24 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* エディタ全体 */
+/* CodeMirror 全体 */
 #editor {
-  padding: 16px;
-  min-height: 100vh;
+  height: 100vh;
 }
 
-/* 1行 = 1 div */
-.line {
-  white-space: pre-wrap;
-  outline: none;
+/* エディタ本体 */
+.cm-editor {
+  height: 100%;
   font-family: monospace;
   font-size: 15px;
-  line-height: 1.6;
+}
 
-  /* ハンギングインデント */
-  padding-left: 2.5em;
-  text-indent: -2.5em;
+/* 行の折り返しを自然に */
+.cm-content {
+  white-space: pre-wrap;
+}
+
+/* iPhoneでのタップ安定化 */
+.cm-line {
+  line-height: 1.6;
 }
