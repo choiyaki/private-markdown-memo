@@ -1,7 +1,16 @@
 body {
   margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-#editor {
+.CodeMirror {
   height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* 折り返し時のインデント揃え */
+.CodeMirror pre {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
