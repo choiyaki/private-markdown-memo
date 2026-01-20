@@ -1,7 +1,11 @@
+// CDN経由で確実に読み込めるURLに変更します
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { EditorView, basicSetup } from "https://codemirror.net/6/codemirror.js";
-import { EditorState } from "https://codemirror.net/6/state.js";
+
+// CodeMirror関連をesm.shからインポート
+import { EditorView, basicSetup } from "https://esm.sh/codemirror";
+import { EditorState } from "https://esm.sh/@codemirror/state";
+
 
 // --- 1. Firebaseの設定 (あなたのコンソールからコピーした内容に書き換えてください) ---
 const firebaseConfig = {
