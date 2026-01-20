@@ -145,19 +145,20 @@ function outdent() {
 
   const lines = value.slice(lineStart, lineEnd).split("\n");
 
-  let removed = 0;
-  const result = lines.map(l => {
-    if (l.startsWith("\t")) {
-      removed += 1;
-      return l.slice(1);
+  let removedTabs = 0;
+  const result = lines.map(line => {
+    if (line.startsWith("\t")) {
+      removedTabs++;
+      return line.substring(1); // ← 明示的に「タブ1文字だけ」
     }
-    return l;
+    return line;
   }).join("\n");
 
   editor.setRangeText(result, lineStart, lineEnd, "end");
 
+  // カーソル補正（削除されたタブ分だけ戻す）
   editor.selectionStart = Math.max(start - 1, lineStart);
-  editor.selectionEnd = Math.max(end - removed, editor.selectionStart);
+  editor.selectionEnd = Math.max(end - removedTabs, editor.selectionStart);
 }
 
 /* 行を上下に移動 */
