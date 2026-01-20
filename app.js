@@ -85,33 +85,95 @@ editor.addEventListener("input", () => {
 
 document.querySelectorAll("#toolbar button").forEach(btn => {
   btn.onclick = () => {
-    wrapText(btn.dataset.insert);
+    const action = btn.dataset.action;
+    if (action === "indent") indent();
+    if (action === "outdent") outdent();
+    if (action === "up") moveLine(-1);
+    if (action === "down") moveLine(1);
+    editor.focus();
   };
 });
 
-function wrapText(mark) {
+function getLines() {
+  const value = editor.value;
   const start = editor.selectionStart;
   const end = editor.selectionEnd;
-  const selected = editor.value.slice(start, end);
 
-  if (selected) {
-    // 選択文字を囲む
-    editor.setRangeText(
-      mark + selected + mark,
-      start,
-      end,
-      "end"
-    );
-  } else {
-    // 空の場合：カーソルを中央に
-    editor.setRangeText(
-      mark + mark,
-      start,
-      end,
-      "end"
-    );
-    editor.selectionStart = editor.selectionEnd = start + mark.length;
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const lineEnd =
+    value.indexOf("\n", end) === -1
+      ? value.length
+      : value.indexOf("\n", end);
+
+  return { value, start, end, lineStart, lineEnd };
+}
+
+/* インデント（2スペース） */
+function indent() {
+  const { value, lineStart, lineEnd } = getLines();
+  const lines = value.slice(lineStart, lineEnd).split("\n");
+
+  const indented = lines.map(l => "  " + l).join("\n");
+
+  editor.setRangeText(indented, lineStart, lineEnd, "end");
+}
+
+/* アウトデント */
+function outdent() {
+  const { value, lineStart, lineEnd } = getLines();
+  const lines = value.slice(lineStart, lineEnd).split("\n");
+
+  const outdented = lines
+    .map(l => l.startsWith("  ") ? l.slice(2) : l)
+    .join("\n");
+
+  editor.setRangeText(outdented, lineStart, lineEnd, "end");
+}
+
+/* 行を上下に移動 */
+function moveLine(dir) {
+  const value = editor.value;
+  const pos = editor.selectionStart;
+
+  const start = value.lastIndexOf("\n", pos - 1) + 1;
+  const end =
+    value.indexOf("\n", pos) === -1
+      ? value.length
+      : value.indexOf("\n", pos);
+
+  const line = value.slice(start, end);
+
+  const before = value.slice(0, start);
+  const after = value.slice(end + 1);
+
+  const prevEnd = before.lastIndexOf("\n", before.length - 2);
+  const nextStart = after.indexOf("\n");
+
+  if (dir === -1 && prevEnd >= 0) {
+    // 上へ
+    const prevStart = before.lastIndexOf("\n", prevEnd - 1) + 1;
+    const prevLine = before.slice(prevStart, prevEnd);
+
+    editor.value =
+      value.slice(0, prevStart) +
+      line + "\n" +
+      prevLine +
+      value.slice(end);
+
+    editor.selectionStart = editor.selectionEnd = prevStart;
   }
 
-  editor.focus();
+  if (dir === 1 && nextStart !== -1) {
+    // 下へ
+    const nextLine = after.slice(0, nextStart);
+
+    editor.value =
+      before +
+      nextLine + "\n" +
+      line +
+      after.slice(nextStart);
+
+    editor.selectionStart = editor.selectionEnd =
+      before.length + nextLine.length + 1;
+  }
 }
