@@ -5,62 +5,83 @@ let lastSyncedContent = "";
 let isInternalChange = false;
 let saveTimeout = null;
 
-try {
-    editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-        lineNumbers: true,
-        mode: "gfm",
-        theme: "dracula",
-        lineWrapping: true,
-        inputStyle: "contenteditable",
-        indentUnit: 2,         
-        smartIndent: true,     
-        tabSize: 2,            
-        lineWiseCopyCut: true,
-        viewportMargin: Infinity, 
-        extraKeys: {
-            "Enter": (cm) => {
-                const cursor = cm.getCursor();
-                const lineText = cm.getLine(cursor.line);
-                // インデント、リスト記号、チェックボックスを判定
-                const match = lineText.match(/^(\s*)([-*+] )(\[[ xX]\] )?/);
+// --- エディタ初期化部分の修正 ---
+editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+    lineNumbers: true,
+    mode: "gfm",
+    theme: "dracula",
+    lineWrapping: true,
+    inputStyle: "contenteditable",
+    indentUnit: 2,         
+    smartIndent: true,     
+    tabSize: 2,            
+    indentWithTabs: true, // ★スペースではなくタブを使用するように変更
+    lineWiseCopyCut: true,
+    viewportMargin: Infinity, 
+    extraKeys: {
+        "Enter": (cm) => {
+            const cursor = cm.getCursor();
+            const lineText = cm.getLine(cursor.line);
+            // タブまたはスペースの後にリスト記号が続く形に対応
+            const match = lineText.match(/^([\s\t]*)([-*+] )(\[[ xX]\] )?/);
 
-                if (match) {
-                    const [full, indent, bullet, checkbox] = match;
-                    // 内容が空（記号のみ）の場合は、記号を消して改行（リスト終了）
-                    if (lineText.trim() === (bullet + (checkbox || "")).trim()) {
-                        cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineText.length});
-                        cm.replaceSelection("\n");
-                    } else {
-                        // 内容がある場合は、改行＋次のリスト記号を挿入
-                        const nextMarker = "\n" + indent + bullet + (checkbox ? "[ ] " : "");
-                        cm.replaceSelection(nextMarker);
-                    }
-                    return; // 独自処理を行ったのでここで終了
+            if (match) {
+                const [full, indent, bullet, checkbox] = match;
+                if (lineText.trim() === (bullet + (checkbox || "")).trim()) {
+                    cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineText.length});
+                    cm.replaceSelection("\n");
+                } else {
+                    const nextMarker = "\n" + indent + bullet + (checkbox ? "[ ] " : "");
+                    cm.replaceSelection(nextMarker);
                 }
-                // リスト以外は標準の改行挙動を許可
-                return CodeMirror.Pass;
+                return;
+            }
+            return CodeMirror.Pass;
+        },
+        // Tabキー自体を押した時の挙動もタブ挿入に固定
+        "Tab": (cm) => {
+            if (cm.somethingSelected()) {
+                cm.indentSelection("add");
+            } else {
+                cm.replaceSelection("\t", "end");
             }
         }
-    });
+    }
+});
 
-    // ② renderLine の処理（整列表示）
-    editor.on("renderLine", (cm, line, elt) => {
-        const match = line.text.match(/^(\s*[-*+] )(\[[ xX]\] )?/);
-        if (match) {
-            const fullMarker = match[0];
-            const length = fullMarker.length;
-            elt.style.paddingLeft = length + "ch";
-            elt.style.textIndent = "-" + length + "ch";
+// --- チェックボックス・トグルボタンの実装 ---
+document.getElementById("checkbox-btn").addEventListener("click", () => {
+    const cursor = editor.getCursor();
+    const lineText = editor.getLine(cursor.line);
+    
+    // 1. すでに [ ] または [x] がある場合は、状態を入れ替える
+    if (lineText.includes("[ ]")) {
+        editor.replaceRange("[x]", 
+            {line: cursor.line, ch: lineText.indexOf("[ ]")}, 
+            {line: cursor.line, ch: lineText.indexOf("[ ]") + 3});
+    } else if (lineText.includes("[x]")) {
+        editor.replaceRange("[ ]", 
+            {line: cursor.line, ch: lineText.indexOf("[x]")}, 
+            {line: cursor.line, ch: lineText.indexOf("[x]") + 3});
+    } else {
+        // 2. リスト記号はあるがチェックボックスがない場合は付与
+        const listMatch = lineText.match(/^([\s\t]*)([-*+] )/);
+        if (listMatch) {
+            editor.replaceRange(listMatch[0] + "[ ] ", 
+                {line: cursor.line, ch: 0}, 
+                {line: cursor.line, ch: listMatch[0].length});
         } else {
-            elt.style.paddingLeft = "";
-            elt.style.textIndent = "";
+            // 3. 何もない場合は新規リストとして作成
+            editor.replaceRange("- [ ] " + lineText, 
+                {line: cursor.line, ch: 0}, 
+                {line: cursor.line, ch: lineText.length});
         }
-    });
+    }
+    editor.focus();
+});
 
-    editor.refresh();
-} catch (error) {
-    console.error("Initialization error:", error);
-}
+// --- (上下移動・インデント等の他のボタン処理はそのまま維持) ---
+
 
 // --- 同期・ボタン・変更検知ロジック ---
 // (以下の部分は提供いただいたコードのままで完璧です)

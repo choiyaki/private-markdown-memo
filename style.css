@@ -58,28 +58,46 @@ body, html {
 
 #toolbar {
     display: flex;
-    align-items: center; /* 中央揃え */
-    gap: 8px;
-    padding: 8px;
+    align-items: center;
+    gap: 10px; /* 間隔を広げた */
+    padding: 10px;
     background: #282a36;
     border-bottom: 1px solid #44475a;
     position: sticky;
     top: 0;
     z-index: 100;
-    overflow-x: auto; /* ボタンが増えても横スクロールで対応可能に */
+    overflow-x: auto;
 }
 
 #toolbar button {
     background: #44475a;
     color: #f8f8f2;
     border: none;
-    min-width: 44px; /* タップしやすい最小幅 */
-    height: 38px;
-    border-radius: 5px;
-    font-size: 16px; /* 少し大きく */
+    min-width: 50px; /* さらに大きく */
+    height: 50px;    /* さらに大きく */
+    border-radius: 8px;
+    font-size: 20px; /* アイコンを大きく */
     cursor: pointer;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.separator {
+    border-left: 2px solid #44475a;
+    height: 30px;
+    margin: 0 5px;
+}
+
+/* タブ幅の視覚的設定 */
+.CodeMirror {
+    font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
+    font-size: 16px; /* スマホで見やすいサイズ */
+    line-height: 1.6;
+    tab-size: 2; /* タブの幅をスペース2つ分に固定 */
+}
+
 
 
 #toolbar button:active {
