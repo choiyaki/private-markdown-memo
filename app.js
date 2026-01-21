@@ -1,50 +1,20 @@
 import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 
-// --- 既存の初期化部分 ---
+// 1. CodeMirrorの初期化
 const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     lineNumbers: true,
-    mode: "gfm", // GitHub Flavored Markdown
+    mode: "gfm",            // GitHub Flavored Markdown
     theme: "dracula",
     lineWrapping: true,
-    inputStyle: "contenteditable",
-    // 括弧の補完なども有効にしたい場合はここに追加
-    autoCloseBrackets: true 
+    inputStyle: "contenteditable", // モバイル向け互換性
+    spellcheck: false,
+    autocorrect: false
 });
-
-
-// --- Markdownリスト補完ロジック ---
-editor.on("keydown", (cm, event) => {
-    // Enterキー (KeyCode 13) かチェック
-    if (event.keyCode === 13) {
-        const cursor = cm.getCursor();
-        const lineContent = cm.getLine(cursor.line); // 現在の行の内容を取得
-
-        // 行が 「- 」や 「* 」 「1. 」などで始まっているか判定する正規表現
-        const listMatch = lineContent.match(/^(\s*)([-*+] \s?|[0-9]+\. \s?)/);
-
-        if (listMatch) {
-            // もし行が「- 」だけで空だったら、Enterでリストを終了させる（記号を消す）
-            if (lineContent.trim() === listMatch[2].trim()) {
-                cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
-            } else {
-                // 次の行に同じリスト記号を挿入
-                const bullet = listMatch[2]; 
-                // 番号リスト(1.)の場合は数字をインクリメントしたいところですが、まずはシンプルに同じものを
-                setTimeout(() => {
-                    cm.replaceSelection(bullet);
-                }, 10);
-            }
-        }
-    }
-});
-
-
 
 let isRemoteUpdate = false;
 let saveTimeout = null;
 
-
-// 1. 受信処理（変更なし）
+// 2. Firebaseからデータを受信して反映
 onSnapshot(memoDocRef, (doc) => {
     if (doc.exists()) {
         const remoteContent = doc.data().content;
@@ -58,31 +28,47 @@ onSnapshot(memoDocRef, (doc) => {
     }
 });
 
-// 2. 送信処理（保存のタイミングを制御）
+// 3. Firebaseへの保存処理（デバウンス機能付き）
 const saveToFirebase = () => {
     if (saveTimeout) clearTimeout(saveTimeout);
     const content = editor.getValue();
     setDoc(memoDocRef, { content: content }, { merge: true })
-        .then(() => console.log("Firestoreに保存されました"))
-        .catch((err) => console.error("保存失敗:", err));
+        .then(() => console.log("Saved to Cloud"))
+        .catch((err) => console.error("Save Error:", err));
 };
 
-editor.on("change", (instance, changeObj) => {
+// 4. エディタの変更検知と補完ロジック
+editor.on("change", (cm, changeObj) => {
+    // 外部同期以外の場合のみ保存処理へ
     if (changeObj.origin !== "setValue" && !isRemoteUpdate) {
-        // iPhoneの変換確定（Enter）や、入力の区切りを検知
-        // 1. Enterキーが押された場合（確定）は即座にタイマーを短くする
-        if (changeObj.text.includes("") || changeObj.origin === "+input") {
-            if (saveTimeout) clearTimeout(saveTimeout);
-            
-            // 入力が止まってから1秒後、または次の確定時に保存
-            saveTimeout = setTimeout(saveToFirebase, 1000);
+        
+        // --- Markdownリスト補完ロジック ---
+        if (changeObj.origin === "+input" && changeObj.text.includes("")) {
+            const cursor = cm.getCursor();
+            // Enterが押された「直前の行」をチェック
+            const prevLine = cm.getLine(cursor.line - 1);
+            const listMatch = prevLine.match(/^(\s*)([-*+] \s?|[0-9]+\. \s?)/);
+
+            if (listMatch) {
+                // 前の行が記号だけで空だった場合は、その記号を消してリスト終了
+                if (prevLine.trim() === listMatch[2].trim()) {
+                    cm.replaceRange("", {line: cursor.line - 1, ch: 0}, {line: cursor.line - 1, ch: prevLine.length});
+                } else {
+                    // 次の行に同じ記号を自動挿入
+                    cm.replaceSelection(listMatch[2]);
+                }
+            }
         }
+
+        // 保存タイマー（1秒待ってから保存）
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveToFirebase, 1000);
     }
 });
 
-// 3. キーボードの「完了」や「改行」を明示的に拾う（おまけ）
-editor.on("keydown", (instance, event) => {
-    if (event.keyCode === 13) { // Enterキー
+// 5. Enterキー（確定）での即時保存
+editor.on("keydown", (cm, event) => {
+    if (event.keyCode === 13) {
         saveToFirebase();
     }
 });
