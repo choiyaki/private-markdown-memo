@@ -16,14 +16,12 @@ body, html {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
-/* リストの折り返し時に、2行目以降の行頭を揃える設定 */
+
+/* リストの折り返し時に、2行目以降の行頭を文字の開始位置に揃える */
 .CodeMirror-line {
-    padding-left: 2em !important;
-    text-indent: -1.5em !important;
+    padding-left: 1.5em !important; /* 全体の左余白 */
+    text-indent: -1.2em !important; /* 1行目だけ左に戻す(記号分) */
 }
 
-/* ネスト（階層）が深くなった時も崩れないように調整 */
-.cm-tab {
-    display: inline-block;
-    width: 2em;
-}
+/* チェックボックスがある行は、さらに少し調整が必要な場合があります */
+/* 必要に応じて数値を微調整してください */
