@@ -68,32 +68,34 @@ editor.on("keydown", (instance, event) => {
         const cursor = instance.getCursor();
         const lineContent = instance.getLine(cursor.line);
         
-        // 正規表現の解説:
-        // ^(\s*)          : 行頭の空白（インデント）をグループ1としてキャプチャ
-        // ([-*+] \s?)     : リスト記号（- or * or +）をグループ2としてキャプチャ
-        // (\[ [x ] \] \s)? : [ ] や [x] のチェックボックスがあればグループ3としてキャプチャ
-        const listMatch = lineContent.match(/^(\s*)([-*+] \s?)(\[[x ]\] \s)?/);
+        // 正規表現の修正:
+        // Group 1: ^(\s*)           -> インデント（空白）
+        // Group 2: ([-*+] \s?)      -> リスト記号
+        // Group 3: (\[[ xX]\] \s)?  -> [ ] や [x] (エスケープを追加)
+        const listMatch = lineContent.match(/^(\s*)([-*+] \s?)(\[[ xX]\] \s)?/);
 
         if (listMatch) {
-            const indent = listMatch[1]; // 前の行の空白
-            const bullet = listMatch[2]; // リスト記号
-            const checkbox = listMatch[3] || ""; // チェックボックス（なければ空文字）
+            const indent = listMatch[1];
+            const bullet = listMatch[2];
+            const checkbox = listMatch[3] || ""; 
             
-            // 行が記号だけで中身が空の場合（リスト終了判定）
-            // 例: "- " や "  - [ ] " だけのとき
-            const prefix = (indent + bullet + checkbox).trim();
-            if (lineContent.trim() === prefix) {
-                // 記号を消して改行を優先（リスト終了）
+            // 判定用の文字列（インデント＋記号＋チェックボックス）
+            const fullMarker = indent + bullet + checkbox;
+
+            // 行がマーカーだけで中身が空の場合（リスト終了）
+            if (lineContent === fullMarker) {
+                // 記号を消す
                 instance.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
             } else {
-                // 内容がある場合は、改行後に「インデント + 記号 + チェックボックス」を挿入
-                const nextInsert = indent + bullet + checkbox;
+                // 新しい行には常に未完了のチェックボックス [ ] を出す設定
+                const newCheckbox = checkbox ? "[ ] " : ""; 
+                const nextInsert = indent + bullet + newCheckbox;
+                
                 setTimeout(() => {
                     instance.replaceSelection(nextInsert);
                 }, 10);
             }
         }
-        // Enter時はタイマーを待たずに保存
         saveToFirebase();
     }
 });
