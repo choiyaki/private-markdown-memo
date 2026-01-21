@@ -1,23 +1,30 @@
 import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 
-// 1. エディタをまず確実に立ち上げる
-const editor = window.CodeMirror.fromTextArea(document.getElementById("editor"), {
-    lineNumbers: true,
-    mode: "gfm",
-    theme: "dracula",
-    lineWrapping: true,
-    inputStyle: "contenteditable"
+// 1. エディタの初期化（基本機能のみ）
+const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+    lineNumbers: true,      // 行番号を表示
+    mode: "gfm",            // GitHub Flavored Markdownモード
+    theme: "dracula",       // テーマ
+    lineWrapping: true,     // 折り返しあり
+    inputStyle: "contenteditable" // iPhoneでの入力を安定させる
 });
 
+// 2. 同期用の管理変数
 let lastSyncedContent = "";
 let isInternalChange = false;
 let saveTimeout = null;
 
-// 2. 同期受信 (データ復旧)
+// 3. Firebaseからデータを受信 (安定化ガード付き)
 onSnapshot(memoDocRef, (doc) => {
     if (!doc.exists()) return;
+    
     const remoteContent = doc.data().content;
-    if (remoteContent === lastSyncedContent || editor.hasFocus()) return;
+
+    // 自分の入力した内容と全く同じなら無視
+    if (remoteContent === lastSyncedContent) return;
+    
+    // 入力中（フォーカスがある時）は外部更新をブロックして競合を防ぐ
+    if (editor.hasFocus()) return;
 
     isInternalChange = true;
     const cursor = editor.getCursor();
@@ -27,51 +34,25 @@ onSnapshot(memoDocRef, (doc) => {
     isInternalChange = false;
 });
 
-// 3. 保存処理
+// 4. Firebaseへの送信
 const saveToFirebase = () => {
     const currentContent = editor.getValue();
     if (currentContent === lastSyncedContent) return;
+
     setDoc(memoDocRef, { content: currentContent }, { merge: true })
-        .then(() => { lastSyncedContent = currentContent; })
-        .catch(err => console.error("Save Error:", err));
+        .then(() => {
+            lastSyncedContent = currentContent;
+            console.log("Firestoreと同期しました");
+        })
+        .catch((err) => console.error("保存失敗:", err));
 };
 
-// 4. 変更検知 (保存タイマー)
+// 5. エディタの変更を検知
 editor.on("change", (cm, changeObj) => {
+    // 内部的な書き換え（受信時）は無視
     if (isInternalChange || changeObj.origin === "setValue") return;
+
+    // 保存タイマー（1秒入力が止まったら保存）
     if (saveTimeout) clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(saveToFirebase, 800);
-});
-
-// 5. キーイベント (削除・改行を絶対に殺さない補完ロジック)
-editor.on("keydown", (cm, event) => {
-    // Enter (13) だけを処理
-    if (event.keyCode === 13) {
-        const cursor = cm.getCursor();
-        const lineText = cm.getLine(cursor.line);
-        
-        // リスト記号の判定
-        const match = lineText.match(/^(\s*)([-*+] )(\[[ xX]\] )?/);
-
-        if (match) {
-            const [full, indent, bullet, checkbox] = match;
-            
-            // 行が記号だけで空なら、その記号を消す (リスト終了)
-            if (lineText.trim() === (bullet + (checkbox || "")).trim()) {
-                // デフォルトの改行を止めて、行をクリアする
-                event.preventDefault();
-                cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineText.length});
-            } else {
-                // 文字があるなら、少し遅らせて記号を挿入 (デフォルトの改行を邪魔しない)
-                const nextMarker = indent + bullet + (checkbox ? "[ ] " : "");
-                setTimeout(() => {
-                    cm.replaceSelection(nextMarker);
-                }, 10);
-            }
-        }
-        // Enter時は即時保存
-        saveToFirebase();
-    }
-    // ここで return true とか event.preventDefault をしない限り、
-    // BackSpaceなどはブラウザ標準の動きになります。
+    saveTimeout = setTimeout(saveToFirebase, 1000);
 });
