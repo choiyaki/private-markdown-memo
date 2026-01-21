@@ -17,11 +17,27 @@ body, html {
 }
 
 
-/* リストの折り返し時に、2行目以降の行頭を文字の開始位置に揃える */
-.CodeMirror-line {
-    padding-left: 1.5em !important; /* 全体の左余白 */
-    text-indent: -1.2em !important; /* 1行目だけ左に戻す(記号分) */
+/* 1. 行全体の余白を確保 */
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
+    padding-left: 2.5em !important; /* リスト記号＋チェックボックス分のスペース */
+    position: relative;
 }
 
-/* チェックボックスがある行は、さらに少し調整が必要な場合があります */
-/* 必要に応じて数値を微調整してください */
+/* 2. リスト記号やインデント部分だけを左側に浮かせる */
+.cm-formatting-list, 
+.cm-variable-2, 
+.cm-meta {
+    /* 記号部分を絶対配置に近い形で左へ寄せる設定（モードによりクラス名が変動） */
+}
+
+/* 3. 折り返し時の行頭揃え（CodeMirror 5の標準的な解決策） */
+.CodeMirror-line {
+    word-break: break-all;
+}
+
+/* 最も確実なのは、CodeMirrorの公式が推奨する「ぶら下げインデント」用スタイル */
+.CodeMirror pre.CodeMirror-line {
+    padding-left: 30px; 
+    text-indent: -30px;
+}

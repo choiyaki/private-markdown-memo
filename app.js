@@ -12,9 +12,12 @@ try {
         theme: "dracula",
         lineWrapping: true,
         inputStyle: "contenteditable",
-    		indentUnit: 2,         // インデントの幅（スペース2つ分）
-    		smartIndent: true,     // 前の行に合わせて自動インデント
-    		tabSize: 2,            // Tabキーの幅
+        indentUnit: 2,         
+        smartIndent: true,     
+        tabSize: 2,            
+        // ★ ここに「折り返し時のインデント」を制御するオプションを追加
+        lineWiseCopyCut: true,
+        viewportMargin: Infinity, // 全体をレンダリング対象にして計算を安定させる
 
         extraKeys: {
             "Enter": (cm) => {
@@ -33,6 +36,24 @@ try {
             }
         }
     });
+
+    // ★ 行頭を揃えるための動的レンダリング設定
+    // リストの記号（- [ ] ）の幅を計算し、2行目以降にその分の余白を付与します
+    editor.on("renderLine", (cm, line, elt) => {
+        const match = line.text.match(/^(\s*)([-*+] )(\[[ xX]\] )?/);
+        if (match) {
+            const off = CodeMirror.countColumn(match[0], null, cm.getOption("tabSize"));
+            elt.style.paddingLeft = off + "ch";
+            elt.style.textIndent = "-" + off + "ch";
+        } else {
+            elt.style.paddingLeft = "";
+            elt.style.textIndent = "";
+        }
+    });
+    
+    // 設定変更を反映
+    editor.refresh();
+
 } catch (error) {
     console.error("Initialization error:", error);
 }
