@@ -15,7 +15,7 @@ try {
         indentUnit: 2,         
         smartIndent: true,     
         tabSize: 2,            
-        indentWithTabs: false, // スペース2つに統一（これが最も安定します）
+        indentWithTabs: false, 
         lineWiseCopyCut: true,
         viewportMargin: Infinity, 
         extraKeys: {
@@ -37,31 +37,29 @@ try {
                 }
                 return CodeMirror.Pass;
             },
-            "Tab": (cm) => {
-                // Tabキーでスペース2つ分インデント
-                cm.execCommand("indentMore");
-            },
-            "Shift-Tab": (cm) => {
-                cm.execCommand("indentLess");
-            }
+            "Tab": (cm) => { cm.execCommand("indentMore"); },
+            "Shift-Tab": (cm) => { cm.execCommand("indentLess"); }
         }
     });
 
-    // ★ 文頭揃えのロジックを再構築
+    // 文頭揃えのロジック
     editor.on("renderLine", (cm, line, elt) => {
-        // 行頭の空白、リスト記号、チェックボックスをすべて含めてマッチング
         const match = line.text.match(/^(\s*[-*+] )(\[[ xX]\] )?/);
         if (match) {
-            // match[0] の実際の文字数を取得
             const length = match[0].length;
-            // 2行目以降の開始位置を padding で作り、1行目だけ text-indent で左に戻す
             elt.style.paddingLeft = length + "ch";
             elt.style.textIndent = "-" + length + "ch";
         } else {
-            // リスト以外の行（または空行）はリセット
             elt.style.paddingLeft = "";
             elt.style.textIndent = "";
         }
+    });
+
+    // 変更検知（保存の発動）
+    editor.on("change", (cm, changeObj) => {
+        if (isInternalChange || changeObj.origin === "setValue") return;
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveToFirebase, 800);
     });
 
     editor.refresh();
@@ -69,24 +67,87 @@ try {
     console.error("Initialization error:", error);
 }
 
-// --- ツールバーボタンの修正（確実に動くコマンドに変更） ---
+// --- Firebase同期ロジック ---
+
+// 1. Firebaseからの受信
+onSnapshot(memoDocRef, (doc) => {
+    if (!doc.exists()) return;
+    const remoteContent = doc.data().content || "";
+    
+    // 内容が同じなら何もしない
+    if (remoteContent === editor.getValue()) {
+        lastSyncedContent = remoteContent;
+        return;
+    }
+    
+    // 入力中の上書き防止（空の時以外）
+    if (editor.hasFocus() && editor.getValue() !== "") return;
+
+    isInternalChange = true;
+    const cursor = editor.getCursor();
+    editor.setValue(remoteContent);
+    editor.setCursor(cursor);
+    lastSyncedContent = remoteContent;
+    isInternalChange = false;
+    console.log("Firebase loaded");
+});
+
+// 2. Firebaseへの送信
+function saveToFirebase() {
+    const currentContent = editor.getValue();
+    if (currentContent === lastSyncedContent) return;
+
+    setDoc(memoDocRef, { content: currentContent }, { merge: true })
+        .then(() => { 
+            lastSyncedContent = currentContent;
+            console.log("Firebase saved");
+        })
+        .catch(err => console.error("Save error:", err));
+}
+
+// --- ツールバーボタンのイベント ---
 
 document.getElementById("indent-btn").addEventListener("click", () => {
-    editor.execCommand("indentMore"); // 確実に右へ
+    editor.execCommand("indentMore");
     editor.focus();
 });
 
 document.getElementById("outdent-btn").addEventListener("click", () => {
-    editor.execCommand("indentLess"); // 確実に左へ
+    editor.execCommand("indentLess");
     editor.focus();
 });
 
-// --- チェックボックスボタンの修正 ---
+document.getElementById("move-up-btn").addEventListener("click", () => {
+    const cursor = editor.getCursor();
+    const line = cursor.line;
+    if (line > 0) {
+        const currentText = editor.getLine(line);
+        const prevText = editor.getLine(line - 1);
+        editor.replaceRange(currentText, {line: line - 1, ch: 0}, {line: line - 1, ch: prevText.length});
+        editor.replaceRange(prevText, {line: line, ch: 0}, {line: line, ch: currentText.length});
+        editor.setCursor({line: line - 1, ch: cursor.ch});
+    }
+    editor.focus();
+});
+
+document.getElementById("move-down-btn").addEventListener("click", () => {
+    const cursor = editor.getCursor();
+    const line = cursor.line;
+    const lastLine = editor.lineCount() - 1;
+    if (line < lastLine) {
+        const currentText = editor.getLine(line);
+        const nextText = editor.getLine(line + 1);
+        editor.replaceRange(currentText, {line: line + 1, ch: 0}, {line: line + 1, ch: nextText.length});
+        editor.replaceRange(nextText, {line: line, ch: 0}, {line: line, ch: currentText.length});
+        editor.setCursor({line: line + 1, ch: cursor.ch});
+    }
+    editor.focus();
+});
+
 document.getElementById("checkbox-btn").addEventListener("click", () => {
     const cursor = editor.getCursor();
     const lineText = editor.getLine(cursor.line);
     
-    // 状態のトグル
     if (lineText.includes("[ ]")) {
         editor.replaceRange("[x]", {line: cursor.line, ch: lineText.indexOf("[ ]")}, {line: cursor.line, ch: lineText.indexOf("[ ]") + 3});
     } else if (lineText.includes("[x]")) {
@@ -94,15 +155,10 @@ document.getElementById("checkbox-btn").addEventListener("click", () => {
     } else {
         const listMatch = lineText.match(/^(\s*)([-*+] )/);
         if (listMatch) {
-            // すでにリスト記号がある場合はその直後に挿入
             editor.replaceRange("[ ] ", {line: cursor.line, ch: listMatch[0].length});
         } else {
-            // 何もない場合は新規作成
             editor.replaceRange("- [ ] " + lineText, {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineText.length});
         }
     }
     editor.focus();
 });
-
-// --- 上下移動・同期ロジック（そのまま） ---
-// ...（以前のコードの move-up, move-down, onSnapshot, saveToFirebase を維持）
