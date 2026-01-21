@@ -68,28 +68,24 @@ editor.on("keydown", (instance, event) => {
         const cursor = instance.getCursor();
         const lineContent = instance.getLine(cursor.line);
         
-        // 正規表現の修正:
-        // Group 1: ^(\s*)           -> インデント（空白）
-        // Group 2: ([-*+] \s?)      -> リスト記号
-        // Group 3: (\[[ xX]\] \s)?  -> [ ] や [x] (エスケープを追加)
-        const listMatch = lineContent.match(/^(\s*)([-*+] \s?)(\[[ xX]\] \s)?/);
+        // より堅牢な正規表現
+        // 1: 行頭の空白, 2: 記号(-*+), 3: チェックボックス部
+        const listMatch = lineContent.match(/^(\s*)([-*+] )(\[[ xX]\] )? /) || lineContent.match(/^(\s*)([-*+] )(\[[ xX]\] )?$/);
 
         if (listMatch) {
-            const indent = listMatch[1];
-            const bullet = listMatch[2];
-            const checkbox = listMatch[3] || ""; 
+            const indent = listMatch[1] || "";
+            const bullet = listMatch[2] || "";
+            const hasCheckbox = listMatch[3] !== undefined;
             
-            // 判定用の文字列（インデント＋記号＋チェックボックス）
-            const fullMarker = indent + bullet + checkbox;
-
-            // 行がマーカーだけで中身が空の場合（リスト終了）
-            if (lineContent === fullMarker) {
+            // 行がマーカーだけで空（リスト終了）か判定
+            const currentMarker = (listMatch[0]).replace(/\s+$/, ""); // 末尾の空白を除去して比較
+            if (lineContent.trim() === currentMarker.trim()) {
                 // 記号を消す
                 instance.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
             } else {
-                // 新しい行には常に未完了のチェックボックス [ ] を出す設定
-                const newCheckbox = checkbox ? "[ ] " : ""; 
-                const nextInsert = indent + bullet + newCheckbox;
+                // 次の行のテキストを作成
+                // チェックボックスがある場合は常に [ ] (未チェック) を出す
+                const nextInsert = hasCheckbox ? `${indent}${bullet}[ ] ` : `${indent}${bullet}`;
                 
                 setTimeout(() => {
                     instance.replaceSelection(nextInsert);
