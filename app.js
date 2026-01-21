@@ -46,9 +46,26 @@ editor.on("change", (instance, changeObj) => {
     }
 });
 
-// 3. キーボードの「完了」や「改行」を明示的に拾う（おまけ）
+// 3. 改行時にリスト記号を自動挿入する (ver0.1への追加機能)
 editor.on("keydown", (instance, event) => {
     if (event.keyCode === 13) { // Enterキー
-        saveToFirebase();
+        const cursor = instance.getCursor();
+        const lineContent = instance.getLine(cursor.line);
+        
+        // 行が 「- 」で始まっているか判定
+        const listMatch = lineContent.match(/^(\s*)- \s?/);
+
+        if (listMatch) {
+            // 中身が空の「- 」なら、Enterでその行の記号を消す（リスト終了）
+            if (lineContent.trim() === "-") {
+                instance.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
+            } else {
+                // 文字がある場合は、改行後に「- 」を挿入
+                setTimeout(() => {
+                    instance.replaceSelection("- ");
+                }, 10);
+            }
+        }
+        saveToFirebase(); // Enter時に保存
     }
 });
