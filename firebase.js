@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 
 // Firebaseコンソールの「プロジェクト設定」からコピーした内容に置き換えてください
 const firebaseConfig = {
@@ -13,6 +14,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getFirestore(app);
 
-export { db, ref, set, onValue };
+// Firestoreの特定のドキュメント（memosコレクションのmainドキュメント）を参照
+const memoDocRef = doc(db, "memos", "main");
+
+export { db, memoDocRef, setDoc, onSnapshot };

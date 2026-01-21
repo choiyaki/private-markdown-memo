@@ -1,4 +1,4 @@
-import { db, ref, set, onValue } from './firebase.js';
+import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 
 // CodeMirrorの初期化
 const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
@@ -8,24 +8,37 @@ const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     lineWrapping: true
 });
 
-const memoRef = ref(db, 'shared_memo/content');
+let isUpdating = false; // ループ防止用フラグ
 
-// 1. Firebaseからデータを受信してエディタに反映
-onValue(memoRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data !== null && data !== editor.getValue()) {
-        // カーソル位置を保持するための工夫が必要ですが、まずは単純な反映
-        const cursor = editor.getCursor();
-        editor.setValue(data);
-        editor.setCursor(cursor);
+// 1. Firestoreからデータをリアルタイム受信
+onSnapshot(memoDocRef, (doc) => {
+    if (isUpdating) return; // 自分が送信中の場合は処理しない
+
+    if (doc.exists()) {
+        const newContent = doc.data().content;
+        if (newContent !== editor.getValue()) {
+            const cursor = editor.getCursor();
+            editor.setValue(newContent);
+            editor.setCursor(cursor);
+        }
     }
 });
 
-// 2. エディタの内容が変更されたらFirebaseに保存
+// 2. エディタの内容が変更されたらFirestoreに保存
 editor.on("change", (instance, changeObj) => {
-    // 'setValue' による変更（外部からの同期）以外の場合のみ送信
+    // 外部（setValue）からの変更でない場合のみ送信
     if (changeObj.origin !== "setValue") {
+        isUpdating = true;
         const content = instance.getValue();
-        set(memoRef, content);
+        
+        // setDocでドキュメント全体を上書き保存
+        setDoc(memoDocRef, { content: content })
+            .then(() => {
+                isUpdating = false;
+            })
+            .catch((error) => {
+                console.error("Error writing document: ", error);
+                isUpdating = false;
+            });
     }
 });
