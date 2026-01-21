@@ -58,24 +58,29 @@ body, html {
 
 #toolbar {
     display: flex;
-    gap: 10px;
-    padding: 10px;
-    background: #282a36; /* 背景色（テーマに合わせる） */
+    align-items: center; /* 中央揃え */
+    gap: 8px;
+    padding: 8px;
+    background: #282a36;
     border-bottom: 1px solid #44475a;
     position: sticky;
     top: 0;
     z-index: 100;
+    overflow-x: auto; /* ボタンが増えても横スクロールで対応可能に */
 }
 
 #toolbar button {
     background: #44475a;
     color: #f8f8f2;
     border: none;
-    padding: 8px 15px;
+    min-width: 44px; /* タップしやすい最小幅 */
+    height: 38px;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 16px; /* 少し大きく */
     cursor: pointer;
+    flex-shrink: 0;
 }
+
 
 #toolbar button:active {
     background: #6272a4; /* 押したときの色 */

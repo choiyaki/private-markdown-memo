@@ -116,6 +116,23 @@ document.getElementById("outdent-btn").addEventListener("click", () => {
     editor.focus(); // 動作後にエディタにフォーカスを戻す
 });
 
+// --- ツールバーボタンの機能実装 ---
+
+// (既存のインデント処理の後に追記)
+
+// 行を上へ移動
+document.getElementById("move-up-btn").addEventListener("click", () => {
+    editor.execCommand("swapLineUp");
+    editor.focus();
+});
+
+// 行を下へ移動
+document.getElementById("move-down-btn").addEventListener("click", () => {
+    editor.execCommand("swapLineDown");
+    editor.focus();
+});
+
+
 
 // 3. 変更検知
 editor.on("change", (cm, changeObj) => {
