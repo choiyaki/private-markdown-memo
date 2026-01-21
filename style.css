@@ -41,3 +41,17 @@ body, html {
     padding-left: 30px; 
     text-indent: -30px;
 }
+
+/* 既存のコードの末尾に追加 */
+
+.CodeMirror {
+    /* iOSとPC両方で綺麗に見える等幅フォントを指定 */
+    font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* 折り返し時の文字のつながりを自然にする */
+.CodeMirror pre.CodeMirror-line {
+    word-break: break-all;
+}

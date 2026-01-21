@@ -6,6 +6,7 @@ let isInternalChange = false;
 let saveTimeout = null;
 
 try {
+    // ① エディタの初期化（既存のコード）
     editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
         mode: "gfm",
@@ -15,48 +16,41 @@ try {
         indentUnit: 2,         
         smartIndent: true,     
         tabSize: 2,            
-        // ★ ここに「折り返し時のインデント」を制御するオプションを追加
         lineWiseCopyCut: true,
-        viewportMargin: Infinity, // 全体をレンダリング対象にして計算を安定させる
-
+        viewportMargin: Infinity, 
         extraKeys: {
             "Enter": (cm) => {
-                cm.execCommand("newlineAndIndent");
-                const cursor = cm.getCursor();
-                const prevLine = cm.getLine(cursor.line - 1);
-                const match = prevLine.match(/^(\s*)([-*+] )(\[[ xX]\] )?/);
-                if (match) {
-                    const [full, indent, bullet, checkbox] = match;
-                    if (prevLine.trim() === (bullet + (checkbox || "")).trim()) {
-                        cm.replaceRange("", {line: cursor.line - 1, ch: 0}, {line: cursor.line - 1, ch: prevLine.length});
-                    } else {
-                        cm.replaceSelection(bullet + (checkbox ? "[ ] " : ""));
-                    }
-                }
+                /* 改行ロジック（そのまま） */
             }
         }
     });
 
-    // ★ 行頭を揃えるための動的レンダリング設定
-    // リストの記号（- [ ] ）の幅を計算し、2行目以降にその分の余白を付与します
+    // ② ここに「renderLine」の処理を追記します
     editor.on("renderLine", (cm, line, elt) => {
-        const match = line.text.match(/^(\s*)([-*+] )(\[[ xX]\] )?/);
+        // インデント・記号・チェックボックス・その後のスペースまでをマッチング
+        const match = line.text.match(/^(\s*[-*+] )(\[[ xX]\] )?/);
+        
         if (match) {
-            const off = CodeMirror.countColumn(match[0], null, cm.getOption("tabSize"));
-            elt.style.paddingLeft = off + "ch";
-            elt.style.textIndent = "-" + off + "ch";
+            const fullMarker = match[0];
+            const length = fullMarker.length;
+            
+            // 文字幅(ch)を使って、1行目の突き出しと2行目以降の揃えを設定
+            elt.style.paddingLeft = length + "ch";
+            elt.style.textIndent = "-" + length + "ch";
         } else {
             elt.style.paddingLeft = "";
             elt.style.textIndent = "";
         }
     });
-    
-    // 設定変更を反映
+
+    // ③ 設定を即時反映（既存のコードの最後の方へ）
     editor.refresh();
 
+    console.log("CodeMirror initialized with hanging indent");
 } catch (error) {
     console.error("Initialization error:", error);
 }
+
 
 // --- 同期ロジックの改善点 ---
 
