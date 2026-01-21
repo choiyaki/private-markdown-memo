@@ -1,6 +1,5 @@
 import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 
-// CodeMirrorの初期化
 const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     lineNumbers: true,
     mode: "javascript",
@@ -8,37 +7,48 @@ const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     lineWrapping: true
 });
 
-let isUpdating = false; // ループ防止用フラグ
+let isRemoteUpdate = false;
+let saveTimeout = null;
 
-// 1. Firestoreからデータをリアルタイム受信
+// 1. 受信処理（変更なし）
 onSnapshot(memoDocRef, (doc) => {
-    if (isUpdating) return; // 自分が送信中の場合は処理しない
-
     if (doc.exists()) {
-        const newContent = doc.data().content;
-        if (newContent !== editor.getValue()) {
+        const remoteContent = doc.data().content;
+        if (remoteContent !== editor.getValue()) {
+            isRemoteUpdate = true;
             const cursor = editor.getCursor();
-            editor.setValue(newContent);
+            editor.setValue(remoteContent);
             editor.setCursor(cursor);
+            isRemoteUpdate = false;
         }
     }
 });
 
-// 2. エディタの内容が変更されたらFirestoreに保存
+// 2. 送信処理（保存のタイミングを制御）
+const saveToFirebase = () => {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    const content = editor.getValue();
+    setDoc(memoDocRef, { content: content }, { merge: true })
+        .then(() => console.log("Firestoreに保存されました"))
+        .catch((err) => console.error("保存失敗:", err));
+};
+
 editor.on("change", (instance, changeObj) => {
-    // 外部（setValue）からの変更でない場合のみ送信
-    if (changeObj.origin !== "setValue") {
-        isUpdating = true;
-        const content = instance.getValue();
-        
-        // setDocでドキュメント全体を上書き保存
-        setDoc(memoDocRef, { content: content })
-            .then(() => {
-                isUpdating = false;
-            })
-            .catch((error) => {
-                console.error("Error writing document: ", error);
-                isUpdating = false;
-            });
+    if (changeObj.origin !== "setValue" && !isRemoteUpdate) {
+        // iPhoneの変換確定（Enter）や、入力の区切りを検知
+        // 1. Enterキーが押された場合（確定）は即座にタイマーを短くする
+        if (changeObj.text.includes("") || changeObj.origin === "+input") {
+            if (saveTimeout) clearTimeout(saveTimeout);
+            
+            // 入力が止まってから1秒後、または次の確定時に保存
+            saveTimeout = setTimeout(saveToFirebase, 1000);
+        }
+    }
+});
+
+// 3. キーボードの「完了」や「改行」を明示的に拾う（おまけ）
+editor.on("keydown", (instance, event) => {
+    if (event.keyCode === 13) { // Enterキー
+        saveToFirebase();
     }
 });
