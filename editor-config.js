@@ -6,31 +6,23 @@ export function initEditor() {
         theme: "dracula",
         lineWrapping: true,
         inputStyle: "contenteditable",
-        indentUnit: 2,         // インデントの単位
-        tabSize: 2,            // タブの表示幅（スペース2つ分）
-        indentWithTabs: true,  // ★ここをtrueに：タブ文字を使用する
+        // indentUnit: 2, // 削除して標準に任せる
+        tabSize: 4,       // タブの表示幅（標準的な4に設定。お好みで変えられます）
+        indentWithTabs: true, 
         lineWiseCopyCut: true,
         viewportMargin: Infinity,
         extraKeys: {
             "Enter": (cm) => handleEnterKey(cm),
-            // Tabキー単体でも「タブ文字」を入れるように明示
-            "Tab": (cm) => {
-                if (cm.somethingSelected()) {
-                    cm.indentSelection("add");
-                } else {
-                    cm.replaceSelection("\t", "end");
-                }
-            },
-            "Shift-Tab": (cm) => { cm.execCommand("indentLess"); }
+            "Tab": "indentMore", // 標準コマンドを使用
+            "Shift-Tab": "indentLess"
         }
     });
 
-    // 文頭揃えのロジック（タブ幅対応版）
+    // 整列表示（タブ幅を自動計算）
     editor.on("renderLine", (cm, line, elt) => {
-        // タブまたはスペースの後にリスト記号が続く形をマッチング
-        const match = line.text.match(/^([\s\t]*[-*+] )(\[[ xX]\] )?/);
+        const match = line.text.match(/^([\t]*[-*+] )(\[[ xX]\] )?/);
         if (match) {
-            // ★ CodeMirror.countColumn を使い、タブが含まれていても「見た目上の幅」を正しく計算
+            // タブの「見た目上の幅」を正確に取得
             const visualWidth = CodeMirror.countColumn(match[0], null, cm.getOption("tabSize"));
             elt.style.paddingLeft = visualWidth + "ch";
             elt.style.textIndent = "-" + visualWidth + "ch";
@@ -46,8 +38,7 @@ export function initEditor() {
 function handleEnterKey(cm) {
     const cursor = cm.getCursor();
     const lineText = cm.getLine(cursor.line);
-    // 改行時にタブとスペースの両方をキャプチャするように修正
-    const match = lineText.match(/^([\s\t]*)([-*+] )(\[[ xX]\] )?/);
+    const match = lineText.match(/^([\t]*)([-*+] )(\[[ xX]\] )?/);
 
     if (match) {
         const [full, indent, bullet, checkbox] = match;
@@ -55,7 +46,7 @@ function handleEnterKey(cm) {
             cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineText.length});
             cm.replaceSelection("\n");
         } else {
-            // 前の行のインデント（タブ等）をそのまま引き継ぐ
+            // インデント（タブ）を維持して改行
             const nextMarker = "\n" + indent + bullet + (checkbox ? "[ ] " : "");
             cm.replaceSelection(nextMarker);
         }
