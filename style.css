@@ -74,7 +74,7 @@ body, html {
     color: #f8f8f2;
     border: none;
     min-width: 50px; /* さらに大きく */
-    height: 50px;    /* さらに大きく */
+    height: 100px;    /* さらに大きく */
     border-radius: 8px;
     font-size: 20px; /* アイコンを大きく */
     cursor: pointer;
@@ -106,5 +106,5 @@ body, html {
 
 /* ツールバーの高さ分、エディタの高さを調整 */
 #editor-container {
-    height: calc(100vh - 55px);
+    height: calc(100vh - 105px);
 }
