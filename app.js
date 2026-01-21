@@ -64,19 +64,32 @@ editor.on("change", (instance, changeObj) => {
 
 // 4. Enterキー（リスト補完 & 即時保存）
 editor.on("keydown", (instance, event) => {
-    if (event.keyCode === 13) {
+    if (event.keyCode === 13) { // Enterキー
         const cursor = instance.getCursor();
         const lineContent = instance.getLine(cursor.line);
-        const listMatch = lineContent.match(/^(\s*)- \s?/);
+        
+        // 正規表現の解説:
+        // ^(\s*)          : 行頭の空白（インデント）をグループ1としてキャプチャ
+        // ([-*+] \s?)     : リスト記号（- or * or +）をグループ2としてキャプチャ
+        // (\[ [x ] \] \s)? : [ ] や [x] のチェックボックスがあればグループ3としてキャプチャ
+        const listMatch = lineContent.match(/^(\s*)([-*+] \s?)(\[[x ]\] \s)?/);
 
         if (listMatch) {
-            if (lineContent.trim() === "-") {
-                // 記号を消す
+            const indent = listMatch[1]; // 前の行の空白
+            const bullet = listMatch[2]; // リスト記号
+            const checkbox = listMatch[3] || ""; // チェックボックス（なければ空文字）
+            
+            // 行が記号だけで中身が空の場合（リスト終了判定）
+            // 例: "- " や "  - [ ] " だけのとき
+            const prefix = (indent + bullet + checkbox).trim();
+            if (lineContent.trim() === prefix) {
+                // 記号を消して改行を優先（リスト終了）
                 instance.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
             } else {
-                // 次の行に記号を挿入
+                // 内容がある場合は、改行後に「インデント + 記号 + チェックボックス」を挿入
+                const nextInsert = indent + bullet + checkbox;
                 setTimeout(() => {
-                    instance.replaceSelection("- ");
+                    instance.replaceSelection(nextInsert);
                 }, 10);
             }
         }
