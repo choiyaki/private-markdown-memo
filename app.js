@@ -12,6 +12,10 @@ try {
         theme: "dracula",
         lineWrapping: true,
         inputStyle: "contenteditable",
+    		indentUnit: 2,         // インデントの幅（スペース2つ分）
+    		smartIndent: true,     // 前の行に合わせて自動インデント
+    		tabSize: 2,            // Tabキーの幅
+
         extraKeys: {
             "Enter": (cm) => {
                 cm.execCommand("newlineAndIndent");
