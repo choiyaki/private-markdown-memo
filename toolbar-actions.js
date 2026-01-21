@@ -1,15 +1,22 @@
 // toolbar-actions.js
+
 export function setupToolbar(editor) {
+    // インデント（右へ移動：タブを1つ追加）
     document.getElementById("indent-btn").addEventListener("click", () => {
+        // 選択範囲がある場合も考慮したCodeMirrorの標準コマンド
+        // indentWithTabs: true の設定により、タブが挿入されます
         editor.execCommand("indentMore");
         editor.focus();
     });
 
+    // アウトデント（左へ移動：タブを1つ削除）
     document.getElementById("outdent-btn").addEventListener("click", () => {
+        // indentWithTabs: true の設定により、タブを優先的に削除します
         editor.execCommand("indentLess");
         editor.focus();
     });
 
+    // --- 以下、上下移動やチェックボックスの処理はそのまま ---
     document.getElementById("move-up-btn").addEventListener("click", () => {
         const cursor = editor.getCursor();
         const line = cursor.line;
@@ -44,7 +51,8 @@ export function setupToolbar(editor) {
         } else if (lineText.includes("[x]")) {
             editor.replaceRange("[ ]", {line: cursor.line, ch: lineText.indexOf("[x]")}, {line: cursor.line, ch: lineText.indexOf("[x]") + 3});
         } else {
-            const listMatch = lineText.match(/^(\s*)([-*+] )/);
+            // タブ文字も考慮した正規表現でマッチング
+            const listMatch = lineText.match(/^([\s\t]*)([-*+] )/);
             if (listMatch) {
                 editor.replaceRange("[ ] ", {line: cursor.line, ch: listMatch[0].length});
             } else {
