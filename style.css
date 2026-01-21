@@ -55,3 +55,33 @@ body, html {
 .CodeMirror pre.CodeMirror-line {
     word-break: break-all;
 }
+
+#toolbar {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: #282a36; /* 背景色（テーマに合わせる） */
+    border-bottom: 1px solid #44475a;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+#toolbar button {
+    background: #44475a;
+    color: #f8f8f2;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#toolbar button:active {
+    background: #6272a4; /* 押したときの色 */
+}
+
+/* ツールバーの高さ分、エディタの高さを調整 */
+#editor-container {
+    height: calc(100vh - 55px);
+}

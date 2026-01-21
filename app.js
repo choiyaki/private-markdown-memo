@@ -100,6 +100,23 @@ const saveToFirebase = () => {
         .catch((err) => console.error("Save error:", err));
 };
 
+// --- ツールバーボタンの機能実装 ---
+
+// インデント（右へ移動）
+document.getElementById("indent-btn").addEventListener("click", () => {
+    // 選択範囲、またはカーソル行をインデント
+    editor.execCommand("indentMore");
+    editor.focus(); // 動作後にエディタにフォーカスを戻す
+});
+
+// アウトデント（左へ移動）
+document.getElementById("outdent-btn").addEventListener("click", () => {
+    // 選択範囲、またはカーソル行のインデントを減らす
+    editor.execCommand("indentLess");
+    editor.focus(); // 動作後にエディタにフォーカスを戻す
+});
+
+
 // 3. 変更検知
 editor.on("change", (cm, changeObj) => {
     // 受信（setValue）による変更時は保存を発動させない
