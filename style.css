@@ -51,14 +51,18 @@ body, html {
     height: calc(100vh - 71px); /* ツールバーの高さに合わせて調整 */
 }
 
+/* ...（上部は同じ）... */
+
 .CodeMirror {
     height: 100%;
-    font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
+    /* ch単位を正確にするため、等幅フォントを最優先に */
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
     font-size: 16px;
     line-height: 1.6;
 }
 
-/* 折り返しと単語の区切り */
-.CodeMirror pre.CodeMirror-line {
-    word-break: break-all;
+/* 2行目以降のインデントを視覚的に補助 */
+.CodeMirror-line {
+    padding-left: 0; 
+    text-indent: 0;
 }
