@@ -1,71 +1,46 @@
-/* 全体のレイアウト */
+/* ベースレイアウト */
 body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background-color: #282a36;
+  margin: 0; padding: 0; height: 100%;
+  background-color: #282a36;
 }
 
-/* ツールバーのスタイル */
+/* ツールバー */
 #toolbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background: #282a36;
-    border-bottom: 1px solid #44475a;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    overflow-x: auto;
-    white-space: nowrap;
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  background: #282a36; border-bottom: 1px solid #44475a;
+  position: sticky; top: 0; z-index: 100; overflow-x: auto;
 }
 
 #toolbar button {
-    background: #44475a;
-    color: #f8f8f2;
-    border: none;
-    min-width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    font-size: 20px;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: #44475a; color: #f8f8f2; border: none;
+  min-width: 50px; height: 50px; border-radius: 8px;
+  font-size: 20px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
 
-#toolbar button:active {
-    background: #6272a4;
-}
+#toolbar button:active { background: #6272a4; }
 
-.separator {
-    border-left: 2px solid #44475a;
-    height: 30px;
-    margin: 0 5px;
-}
+.separator { border-left: 2px solid #44475a; height: 30px; margin: 0 5px; }
 
-/* エディタのスタイル */
+/* エディタエリア */
 #editor-container {
-    height: calc(100vh - 71px); /* ツールバーの高さに合わせて調整 */
+  height: calc(100vh - 71px);
 }
 
-/* ...（上部は同じ）... */
-
-/* CodeMirrorの標準的な行ラッピングに準拠した定義 */
-.CodeMirror-line {
-    word-break: break-all;
+.CodeMirror {
+  height: 100%;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
-/* ぶら下げインデント用の専用クラス */
-/* 2行目以降に自動的にパディングを適用する設定 */
+/* --- CodeMirror準拠のぶら下げインデント設定 --- */
+/* wrapクラス（行全体）に対してパディングを設定 */
 .cm-hanging-indent {
-    padding-left: 2em; /* タブ幅や記号分 */
-    text-indent: -2em;
+  /* タブ1つ分(4ch) + 記号+スペース(2ch) = 6ch 前後の目安 */
+  padding-left: 4ch !important;
+  text-indent: -4ch !important;
 }
 
-/* ネスト（階層）が深くなった場合もCodeMirrorの構造に従う */
-.CodeMirror-line-like {
-    padding-left: inherit;
-}
+/* 折り返し設定 */
+.CodeMirror-line { word-break: break-all; }
