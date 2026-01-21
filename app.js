@@ -116,22 +116,42 @@ document.getElementById("outdent-btn").addEventListener("click", () => {
     editor.focus(); // 動作後にエディタにフォーカスを戻す
 });
 
-// --- ツールバーボタンの機能実装 ---
-
-// (既存のインデント処理の後に追記)
-
 // 行を上へ移動
 document.getElementById("move-up-btn").addEventListener("click", () => {
-    editor.execCommand("swapLineUp");
+    const cursor = editor.getCursor();
+    const line = cursor.line;
+    if (line > 0) {
+        // 現在の行と上の行の内容を入れ替える
+        const currentText = editor.getLine(line);
+        const prevText = editor.getLine(line - 1);
+        
+        editor.replaceRange(currentText, {line: line - 1, ch: 0}, {line: line - 1, ch: prevText.length});
+        editor.replaceRange(prevText, {line: line, ch: 0}, {line: line, ch: currentText.length});
+        
+        // カーソルも一緒に移動
+        editor.setCursor({line: line - 1, ch: cursor.ch});
+    }
     editor.focus();
 });
 
 // 行を下へ移動
 document.getElementById("move-down-btn").addEventListener("click", () => {
-    editor.execCommand("swapLineDown");
+    const cursor = editor.getCursor();
+    const line = cursor.line;
+    const lastLine = editor.lineCount() - 1;
+    if (line < lastLine) {
+        // 現在の行と下の行の内容を入れ替える
+        const currentText = editor.getLine(line);
+        const nextText = editor.getLine(line + 1);
+        
+        editor.replaceRange(currentText, {line: line + 1, ch: 0}, {line: line + 1, ch: nextText.length});
+        editor.replaceRange(nextText, {line: line, ch: 0}, {line: line, ch: currentText.length});
+        
+        // カーソルも一緒に移動
+        editor.setCursor({line: line + 1, ch: cursor.ch});
+    }
     editor.focus();
 });
-
 
 
 // 3. 変更検知
