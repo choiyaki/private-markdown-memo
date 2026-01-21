@@ -7,11 +7,17 @@ const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     lineWrapping: true
 });
 
+
 let isRemoteUpdate = false;
 let saveTimeout = null;
+let lastInputTime = 0; // 最後に自分が入力した時刻を記録
 
-// 1. 受信処理（変更なし）
+// 1. 受信処理（自分の入力直後なら無視するガードを追加）
 onSnapshot(memoDocRef, (doc) => {
+    const now = Date.now();
+    // 最後に自分で入力してから1.5秒以内は、外部からの同期を無視する
+    if (now - lastInputTime < 1500) return;
+
     if (doc.exists()) {
         const remoteContent = doc.data().content;
         if (remoteContent !== editor.getValue()) {
@@ -24,48 +30,43 @@ onSnapshot(memoDocRef, (doc) => {
     }
 });
 
-// 2. 送信処理（保存のタイミングを制御）
+// 2. 送信処理（時差を短縮）
 const saveToFirebase = () => {
     if (saveTimeout) clearTimeout(saveTimeout);
     const content = editor.getValue();
     setDoc(memoDocRef, { content: content }, { merge: true })
-        .then(() => console.log("Firestoreに保存されました"))
         .catch((err) => console.error("保存失敗:", err));
 };
 
 editor.on("change", (instance, changeObj) => {
     if (changeObj.origin !== "setValue" && !isRemoteUpdate) {
-        // iPhoneの変換確定（Enter）や、入力の区切りを検知
-        // 1. Enterキーが押された場合（確定）は即座にタイマーを短くする
-        if (changeObj.text.includes("") || changeObj.origin === "+input") {
-            if (saveTimeout) clearTimeout(saveTimeout);
-            
-            // 入力が止まってから1秒後、または次の確定時に保存
-            saveTimeout = setTimeout(saveToFirebase, 1000);
-        }
+        lastInputTime = Date.now(); // 入力時刻を更新
+        
+        if (saveTimeout) clearTimeout(saveTimeout);
+        // 保存までの待ち時間を 300ms に短縮（体感的にほぼ即時）
+        saveTimeout = setTimeout(saveToFirebase, 300);
     }
 });
 
-// 3. 改行時にリスト記号を自動挿入する (ver0.1への追加機能)
+// 3. キーイベント（リスト補完）
 editor.on("keydown", (instance, event) => {
-    if (event.keyCode === 13) { // Enterキー
+    if (event.keyCode === 13) { // Enter
+        lastInputTime = Date.now(); // Enterも入力としてカウント
+        
         const cursor = instance.getCursor();
         const lineContent = instance.getLine(cursor.line);
-        
-        // 行が 「- 」で始まっているか判定
         const listMatch = lineContent.match(/^(\s*)- \s?/);
 
         if (listMatch) {
-            // 中身が空の「- 」なら、Enterでその行の記号を消す（リスト終了）
             if (lineContent.trim() === "-") {
                 instance.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
             } else {
-                // 文字がある場合は、改行後に「- 」を挿入
+                // 補完の実行を 1ms にして即時化
                 setTimeout(() => {
                     instance.replaceSelection("- ");
-                }, 10);
+                }, 1);
             }
         }
-        saveToFirebase(); // Enter時に保存
+        saveToFirebase(); // Enter時は即座に飛ばす
     }
 });
