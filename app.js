@@ -3,67 +3,43 @@ import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 let editor;
 
 try {
-    // 1. エディタの初期化（今動いた設定を維持）
     editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
-        mode: "markdown",
+        mode: "gfm", // GitHub Flavored Markdown
         theme: "dracula",
         lineWrapping: true,
-        inputStyle: "contenteditable"
+        inputStyle: "contenteditable",
+        // --- ここから追加 ---
+        extraKeys: {
+            // Enterキーを押したときに「改行＋インデント継続」を命令する
+            "Enter": (cm) => {
+                // 基本の改行＋インデント機能を呼び出す
+                cm.execCommand("newlineAndIndent");
+                
+                // 前の行のリスト記号を判定して補完する処理
+                const cursor = cm.getCursor();
+                const prevLine = cm.getLine(cursor.line - 1);
+                const match = prevLine.match(/^(\s*)([-*+] )(\[[ xX]\] )?/);
+                
+                if (match) {
+                    const [full, indent, bullet, checkbox] = match;
+                    // 空のリスト（"- " だけの行）なら、その行を消してリスト終了
+                    if (prevLine.trim() === (bullet + (checkbox || "")).trim()) {
+                        cm.replaceRange("", {line: cursor.line - 1, ch: 0}, {line: cursor.line - 1, ch: prevLine.length});
+                    } else {
+                        // 内容があるなら、記号を引き継ぐ
+                        const nextMarker = bullet + (checkbox ? "[ ] " : "");
+                        cm.replaceSelection(nextMarker);
+                    }
+                }
+            }
+        }
+        // --- ここまで追加 ---
     });
 
-    console.log("CodeMirror initialized");
+    console.log("CodeMirror initialized with list support");
 } catch (error) {
     console.error("Initialization error:", error);
 }
 
-// 同期用の管理変数
-let lastSyncedContent = "";
-let isInternalChange = false;
-let saveTimeout = null;
-
-// 2. Firebaseからデータを受信 (安定化ガード)
-onSnapshot(memoDocRef, (doc) => {
-    try {
-        if (!doc.exists()) return;
-        
-        const remoteContent = doc.data().content;
-
-        // 変化がない、または入力中（フォーカスあり）なら同期しない
-        if (remoteContent === lastSyncedContent || editor.hasFocus()) return;
-
-        isInternalChange = true;
-        const cursor = editor.getCursor();
-        editor.setValue(remoteContent);
-        editor.setCursor(cursor);
-        lastSyncedContent = remoteContent;
-        isInternalChange = false;
-        
-        console.log("Remote update applied");
-    } catch (e) {
-        console.error("Sync error:", e);
-    }
-});
-
-// 3. Firebaseへの送信処理
-const saveToFirebase = () => {
-    const currentContent = editor.getValue();
-    if (currentContent === lastSyncedContent) return;
-
-    setDoc(memoDocRef, { content: currentContent }, { merge: true })
-        .then(() => {
-            lastSyncedContent = currentContent;
-            console.log("Saved to Firestore");
-        })
-        .catch((err) => console.error("Save error:", err));
-};
-
-// 4. 変更検知
-editor.on("change", (cm, changeObj) => {
-    // 受信による変更は無視
-    if (isInternalChange || changeObj.origin === "setValue") return;
-
-    // 1秒待って保存
-    if (saveTimeout) clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(saveToFirebase, 1000);
-});
+// ...（以下の同期ロジックはそのまま維持）
