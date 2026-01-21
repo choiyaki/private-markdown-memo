@@ -1,17 +1,18 @@
 import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 
-// 設定を最小限にします
+// CodeMirrorの初期化
 const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     lineNumbers: true,
-    mode: "gfm",
+    mode: "markdown",
     theme: "dracula",
     lineWrapping: true,
-    inputStyle: "contenteditable" // iPhoneで文字を打つために必須
+    inputStyle: "contenteditable" // iPhoneでの入力に必須
 });
 
 let isRemoteUpdate = false;
+let saveTimeout = null;
 
-// 1. Firebaseからデータを受け取る
+// 1. Firestoreからデータを受信して反映
 onSnapshot(memoDocRef, (doc) => {
     if (doc.exists()) {
         const remoteContent = doc.data().content;
@@ -25,15 +26,17 @@ onSnapshot(memoDocRef, (doc) => {
     }
 });
 
-// 2. 変更があったら1秒後に保存（Enter判定などは一切なし）
-let saveTimeout = null;
-editor.on("change", () => {
-    if (isRemoteUpdate) return; // リモートからの更新時は何もしない
-
-    if (saveTimeout) clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-        const content = editor.getValue();
-        setDoc(memoDocRef, { content: content }, { merge: true })
-            .catch(err => console.error("Save error:", err));
-    }, 1000);
+// 2. エディタの内容が変更されたら1秒後に保存
+editor.on("change", (instance, changeObj) => {
+    // 外部（setValue）からの変更でない場合のみ処理
+    if (changeObj.origin !== "setValue" && !isRemoteUpdate) {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        
+        saveTimeout = setTimeout(() => {
+            const content = instance.getValue();
+            setDoc(memoDocRef, { content: content }, { merge: true })
+                .then(() => console.log("Saved!"))
+                .catch((error) => console.error("Save error:", error));
+        }, 1000); // 1秒間入力が止まったら送信
+    }
 });
