@@ -27,20 +27,19 @@ body, html {
   height: calc(100vh - 71px);
 }
 
+/* ...（前回の設定を維持）... */
+
 .CodeMirror {
-  height: 100%;
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
-  font-size: 16px;
-  line-height: 1.6;
+    height: 100%;
+    cursor: text; /* 確実にテキストカーソルにする */
 }
 
-/* --- CodeMirror準拠のぶら下げインデント設定 --- */
-/* wrapクラス（行全体）に対してパディングを設定 */
+/* クラス名はそのまま、!importantを付けて確実に適用 */
 .cm-hanging-indent {
-  /* タブ1つ分(4ch) + 記号+スペース(2ch) = 6ch 前後の目安 */
-  padding-left: 4ch !important;
-  text-indent: -4ch !important;
+    padding-left: 5ch !important;
+    text-indent: -5ch !important;
 }
+
 
 /* 折り返し設定 */
 .CodeMirror-line { word-break: break-all; }
