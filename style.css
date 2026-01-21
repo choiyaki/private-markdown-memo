@@ -15,3 +15,15 @@ body, html {
     font-size: 16px;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
+
+/* リストの折り返し時に、2行目以降の行頭を揃える設定 */
+.CodeMirror-line {
+    padding-left: 2em !important;
+    text-indent: -1.5em !important;
+}
+
+/* ネスト（階層）が深くなった時も崩れないように調整 */
+.cm-tab {
+    display: inline-block;
+    width: 2em;
+}
