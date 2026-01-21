@@ -1,45 +1,31 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { EditorView, basicSetup } from "https://esm.sh/codemirror";
+import { db, ref, set, onValue } from './firebase.js';
 
-const firebaseConfig = { /* あなたの設定 */ };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const docRef = doc(db, "memos", "shared-note");
-
-let isRemoteUpdate = false;
-
-const editor = new EditorView({
-    doc: "読み込み中...",
-    extensions: [
-        basicSetup,
-        EditorView.updateListener.of((update) => {
-            if (update.docChanged && !isRemoteUpdate) {
-                const newText = update.state.doc.toString();
-                // 1秒待たずに即時保存（テストのため）
-                setDoc(docRef, { text: newText }).catch(e => console.error("保存エラー:", e));
-            }
-        })
-    ],
-    parent: document.getElementById("editor")
+// CodeMirrorの初期化
+const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+    lineNumbers: true,
+    mode: "javascript",
+    theme: "dracula",
+    lineWrapping: true
 });
 
-// データの読み込み
-onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-        const data = docSnap.data().text;
-        const currentText = editor.state.doc.toString();
-        if (data !== currentText) {
-            isRemoteUpdate = true;
-            editor.dispatch({
-                changes: { from: 0, to: currentText.length, insert: data }
-            });
-            isRemoteUpdate = false;
-        }
-    } else {
-        // 初めて使う時の初期化
-        setDoc(docRef, { text: "ここにメモを書いてください" });
+const memoRef = ref(db, 'shared_memo/content');
+
+// 1. Firebaseからデータを受信してエディタに反映
+onValue(memoRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data !== null && data !== editor.getValue()) {
+        // カーソル位置を保持するための工夫が必要ですが、まずは単純な反映
+        const cursor = editor.getCursor();
+        editor.setValue(data);
+        editor.setCursor(cursor);
     }
-}, (error) => {
-    console.error("読み込みエラー（ルールを確認してください）:", error);
+});
+
+// 2. エディタの内容が変更されたらFirebaseに保存
+editor.on("change", (instance, changeObj) => {
+    // 'setValue' による変更（外部からの同期）以外の場合のみ送信
+    if (changeObj.origin !== "setValue") {
+        const content = instance.getValue();
+        set(memoRef, content);
+    }
 });
