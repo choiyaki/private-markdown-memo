@@ -53,16 +53,19 @@ body, html {
 
 /* ...（上部は同じ）... */
 
-.CodeMirror {
-    height: 100%;
-    /* ch単位を正確にするため、等幅フォントを最優先に */
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-    font-size: 16px;
-    line-height: 1.6;
+/* CodeMirrorの標準的な行ラッピングに準拠した定義 */
+.CodeMirror-line {
+    word-break: break-all;
 }
 
-/* 2行目以降のインデントを視覚的に補助 */
-.CodeMirror-line {
-    padding-left: 0; 
-    text-indent: 0;
+/* ぶら下げインデント用の専用クラス */
+/* 2行目以降に自動的にパディングを適用する設定 */
+.cm-hanging-indent {
+    padding-left: 2em; /* タブ幅や記号分 */
+    text-indent: -2em;
+}
+
+/* ネスト（階層）が深くなった場合もCodeMirrorの構造に従う */
+.CodeMirror-line-like {
+    padding-left: inherit;
 }

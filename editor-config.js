@@ -6,51 +6,28 @@ export function initEditor() {
         theme: "dracula",
         lineWrapping: true,
         inputStyle: "contenteditable",
-        // indentUnit: 2, // 削除して標準に任せる
-        tabSize: 4,       // タブの表示幅（標準的な4に設定。お好みで変えられます）
+        tabSize: 4,
         indentWithTabs: true, 
         lineWiseCopyCut: true,
         viewportMargin: Infinity,
         extraKeys: {
-            "Enter": (cm) => handleEnterKey(cm),
-            "Tab": "indentMore", // 標準コマンドを使用
+            "Enter": "newlineAndIndentContinueMarkdownList", // 公式のリスト継続コマンド
+            "Tab": "indentMore",
             "Shift-Tab": "indentLess"
         }
     });
 
-    // 整列表示（タブ幅を自動計算）
+    // 自前でスタイルを計算せず、CodeMirrorの行管理機能（LineClass）を利用する
     editor.on("renderLine", (cm, line, elt) => {
         const match = line.text.match(/^([\t]*[-*+] )(\[[ xX]\] )?/);
         if (match) {
-            // タブの「見た目上の幅」を正確に取得
-            const visualWidth = CodeMirror.countColumn(match[0], null, cm.getOption("tabSize"));
-            elt.style.paddingLeft = visualWidth + "ch";
-            elt.style.textIndent = "-" + visualWidth + "ch";
+            // CodeMirrorに「この行はぶら下げインデントが必要」とマークする
+            cm.addLineClass(line, "wrap", "cm-hanging-indent");
         } else {
-            elt.style.paddingLeft = "";
-            elt.style.textIndent = "";
+            // 不要な場合はクラスを削除
+            cm.removeLineClass(line, "wrap", "cm-hanging-indent");
         }
     });
 
     return editor;
-}
-
-function handleEnterKey(cm) {
-    const cursor = cm.getCursor();
-    const lineText = cm.getLine(cursor.line);
-    const match = lineText.match(/^([\t]*)([-*+] )(\[[ xX]\] )?/);
-
-    if (match) {
-        const [full, indent, bullet, checkbox] = match;
-        if (lineText.trim() === (bullet + (checkbox || "")).trim()) {
-            cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineText.length});
-            cm.replaceSelection("\n");
-        } else {
-            // インデント（タブ）を維持して改行
-            const nextMarker = "\n" + indent + bullet + (checkbox ? "[ ] " : "");
-            cm.replaceSelection(nextMarker);
-        }
-    } else {
-        cm.replaceSelection("\n");
-    }
 }
