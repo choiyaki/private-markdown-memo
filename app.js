@@ -1,12 +1,11 @@
 import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 
-// 1. CodeMirrorの初期化
 const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     lineNumbers: true,
-    mode: "gfm",            // GitHub Flavored Markdown
+    mode: "gfm",
     theme: "dracula",
     lineWrapping: true,
-    inputStyle: "contenteditable", // モバイル向け互換性
+    inputStyle: "contenteditable",
     spellcheck: false,
     autocorrect: false
 });
@@ -14,7 +13,7 @@ const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
 let isRemoteUpdate = false;
 let saveTimeout = null;
 
-// 2. Firebaseからデータを受信して反映
+// 1. Firebase受信
 onSnapshot(memoDocRef, (doc) => {
     if (doc.exists()) {
         const remoteContent = doc.data().content;
@@ -28,47 +27,48 @@ onSnapshot(memoDocRef, (doc) => {
     }
 });
 
-// 3. Firebaseへの保存処理（デバウンス機能付き）
+// 2. Firebase保存関数
 const saveToFirebase = () => {
     if (saveTimeout) clearTimeout(saveTimeout);
     const content = editor.getValue();
     setDoc(memoDocRef, { content: content }, { merge: true })
-        .then(() => console.log("Saved to Cloud"))
-        .catch((err) => console.error("Save Error:", err));
+        .then(() => console.log("Saved"))
+        .catch((err) => console.error("Error:", err));
 };
 
-// 4. エディタの変更検知と補完ロジック
+// 3. 変更検知（保存予約のみ）
 editor.on("change", (cm, changeObj) => {
-    // 外部同期以外の場合のみ保存処理へ
     if (changeObj.origin !== "setValue" && !isRemoteUpdate) {
-        
-        // --- Markdownリスト補完ロジック ---
-        if (changeObj.origin === "+input" && changeObj.text.includes("")) {
-            const cursor = cm.getCursor();
-            // Enterが押された「直前の行」をチェック
-            const prevLine = cm.getLine(cursor.line - 1);
-            const listMatch = prevLine.match(/^(\s*)([-*+] \s?|[0-9]+\. \s?)/);
-
-            if (listMatch) {
-                // 前の行が記号だけで空だった場合は、その記号を消してリスト終了
-                if (prevLine.trim() === listMatch[2].trim()) {
-                    cm.replaceRange("", {line: cursor.line - 1, ch: 0}, {line: cursor.line - 1, ch: prevLine.length});
-                } else {
-                    // 次の行に同じ記号を自動挿入
-                    cm.replaceSelection(listMatch[2]);
-                }
-            }
-        }
-
-        // 保存タイマー（1秒待ってから保存）
         if (saveTimeout) clearTimeout(saveTimeout);
         saveTimeout = setTimeout(saveToFirebase, 1000);
     }
 });
 
-// 5. Enterキー（確定）での即時保存
+// 4. キーイベント制御（改行とリスト補完）
 editor.on("keydown", (cm, event) => {
+    // Enterキー (KeyCode 13) の場合
     if (event.keyCode === 13) {
+        const cursor = cm.getCursor();
+        const lineContent = cm.getLine(cursor.line);
+        
+        // リスト記号 (- や 1. など) で始まっているか判定
+        const listMatch = lineContent.match(/^(\s*)([-*+] \s?|[0-9]+\. \s?)/);
+
+        if (listMatch) {
+            // もし記号だけで中身が空なら、その記号を消してリスト終了
+            if (lineContent.trim() === listMatch[2].trim()) {
+                event.preventDefault(); // 通常の改行をキャンセル
+                cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
+            } else {
+                // 内容がある場合は、改行後に記号を挿入する
+                // 少し遅らせて実行することで、CodeMirror本来の改行処理を待つ
+                setTimeout(() => {
+                    cm.replaceSelection(listMatch[2]);
+                }, 10);
+            }
+        }
+        
+        // Enterが押されたら即保存も実行
         saveToFirebase();
     }
 });
