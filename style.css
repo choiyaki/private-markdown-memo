@@ -1,65 +1,16 @@
+/* 全体のレイアウト */
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    background-color: #282a36; /* Dracula背景色 */
+    background-color: #282a36;
 }
 
-#editor-container {
-    height: 100vh;
-    width: 100vw;
-}
-
-.CodeMirror {
-    height: 100% !important;
-    font-size: 16px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-}
-
-
-/* 1. 行全体の余白を確保 */
-.CodeMirror pre.CodeMirror-line,
-.CodeMirror pre.CodeMirror-line-like {
-    padding-left: 2.5em !important; /* リスト記号＋チェックボックス分のスペース */
-    position: relative;
-}
-
-/* 2. リスト記号やインデント部分だけを左側に浮かせる */
-.cm-formatting-list, 
-.cm-variable-2, 
-.cm-meta {
-    /* 記号部分を絶対配置に近い形で左へ寄せる設定（モードによりクラス名が変動） */
-}
-
-/* 3. 折り返し時の行頭揃え（CodeMirror 5の標準的な解決策） */
-.CodeMirror-line {
-    word-break: break-all;
-}
-
-/* 最も確実なのは、CodeMirrorの公式が推奨する「ぶら下げインデント」用スタイル */
-.CodeMirror pre.CodeMirror-line {
-    padding-left: 30px; 
-    text-indent: -30px;
-}
-
-/* 既存のコードの末尾に追加 */
-
-.CodeMirror {
-    /* iOSとPC両方で綺麗に見える等幅フォントを指定 */
-    font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
-    font-size: 14px;
-    line-height: 1.6;
-}
-
-/* 折り返し時の文字のつながりを自然にする */
-.CodeMirror pre.CodeMirror-line {
-    word-break: break-all;
-}
-
+/* ツールバーのスタイル */
 #toolbar {
     display: flex;
     align-items: center;
-    gap: 10px; /* 間隔を広げた */
+    gap: 10px;
     padding: 10px;
     background: #282a36;
     border-bottom: 1px solid #44475a;
@@ -67,21 +18,26 @@ body, html {
     top: 0;
     z-index: 100;
     overflow-x: auto;
+    white-space: nowrap;
 }
 
 #toolbar button {
     background: #44475a;
     color: #f8f8f2;
     border: none;
-    min-width: 50px; /* さらに大きく */
-    height: 100px;    /* さらに大きく */
+    min-width: 50px;
+    height: 50px;
     border-radius: 8px;
-    font-size: 20px; /* アイコンを大きく */
+    font-size: 20px;
     cursor: pointer;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+#toolbar button:active {
+    background: #6272a4;
 }
 
 .separator {
@@ -90,21 +46,19 @@ body, html {
     margin: 0 5px;
 }
 
-/* タブ幅の視覚的設定 */
-.CodeMirror {
-    font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
-    font-size: 16px; /* スマホで見やすいサイズ */
-    line-height: 1.6;
-    tab-size: 2; /* タブの幅をスペース2つ分に固定 */
-}
-
-
-
-#toolbar button:active {
-    background: #6272a4; /* 押したときの色 */
-}
-
-/* ツールバーの高さ分、エディタの高さを調整 */
+/* エディタのスタイル */
 #editor-container {
-    height: calc(100vh - 105px);
+    height: calc(100vh - 71px); /* ツールバーの高さに合わせて調整 */
+}
+
+.CodeMirror {
+    height: 100%;
+    font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* 折り返しと単語の区切り */
+.CodeMirror pre.CodeMirror-line {
+    word-break: break-all;
 }
