@@ -6,8 +6,10 @@ const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
     theme: "dracula",
     lineWrapping: true,
     inputStyle: "contenteditable",
-    spellcheck: false,
-    autocorrect: false
+    // ここから重要設定
+    extraKeys: {
+        "Enter": "newlineAndIndentContinueMarkdownList" // 公式アドオンの機能
+    }
 });
 
 let isRemoteUpdate = false;
@@ -27,48 +29,23 @@ onSnapshot(memoDocRef, (doc) => {
     }
 });
 
-// 2. Firebase保存関数
+// 2. 保存関数
 const saveToFirebase = () => {
-    if (saveTimeout) clearTimeout(saveTimeout);
     const content = editor.getValue();
     setDoc(memoDocRef, { content: content }, { merge: true })
-        .then(() => console.log("Saved"))
-        .catch((err) => console.error("Error:", err));
+        .catch((err) => console.error("Save Error:", err));
 };
 
-// 3. 変更検知（保存予約のみ）
+// 3. 変更検知（保存とEnterの検知）
 editor.on("change", (cm, changeObj) => {
     if (changeObj.origin !== "setValue" && !isRemoteUpdate) {
+        // 保存タイマー（デバウンス）
         if (saveTimeout) clearTimeout(saveTimeout);
         saveTimeout = setTimeout(saveToFirebase, 1000);
-    }
-});
-
-// 4. キーイベント制御（改行とリスト補完）
-editor.on("keydown", (cm, event) => {
-    // Enterキー (KeyCode 13) の場合
-    if (event.keyCode === 13) {
-        const cursor = cm.getCursor();
-        const lineContent = cm.getLine(cursor.line);
         
-        // リスト記号 (- や 1. など) で始まっているか判定
-        const listMatch = lineContent.match(/^(\s*)([-*+] \s?|[0-9]+\. \s?)/);
-
-        if (listMatch) {
-            // もし記号だけで中身が空なら、その記号を消してリスト終了
-            if (lineContent.trim() === listMatch[2].trim()) {
-                event.preventDefault(); // 通常の改行をキャンセル
-                cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
-            } else {
-                // 内容がある場合は、改行後に記号を挿入する
-                // 少し遅らせて実行することで、CodeMirror本来の改行処理を待つ
-                setTimeout(() => {
-                    cm.replaceSelection(listMatch[2]);
-                }, 10);
-            }
+        // Enter（改行）が含まれる変更の場合、即時保存
+        if (changeObj.text.includes("")) {
+            saveToFirebase();
         }
-        
-        // Enterが押されたら即保存も実行
-        saveToFirebase();
     }
 });
