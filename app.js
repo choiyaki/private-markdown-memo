@@ -29,12 +29,12 @@ if (window.visualViewport) {
         if (keyboardHeight > 100) { 
             // キーボード出現時：
             // keyboardHeight に「11行分（約300px）」の余裕をプラスします
-            const extraBuffer = 300; 
+            const extraBuffer = 200; 
             container.style.paddingBottom = `${keyboardHeight + extraBuffer}px`;
         } else {
             // キーボードが閉じている時も、少し余白（100px程度）があると
             // 画面の下ギリギリにならず打ちやすいです
-            container.style.paddingBottom = '100px';
+            container.style.paddingBottom = '70px';
         }
         
         lockViewport(); 
