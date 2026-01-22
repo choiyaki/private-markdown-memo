@@ -10,32 +10,37 @@ let lastSyncedContent = "";
 let isInternalChange = false;
 let saveTimeout = null;
 
-// Firebase -> Editor
+// Firebase受信
 onSnapshot(memoDocRef, (doc) => {
-  if (!doc.exists()) return;
-  const remote = doc.data().content || "";
-  if (remote === editor.getValue() || (editor.hasFocus() && editor.getValue() !== "")) return;
-
-  isInternalChange = true;
-  const cursor = editor.getCursor();
-  editor.setValue(remote);
-  editor.setCursor(cursor);
-  lastSyncedContent = remote;
-  isInternalChange = false;
+    if (!doc.exists()) return;
+    const remote = doc.data().content || "";
+    if (remote === editor.getValue()) {
+        lastSyncedContent = remote;
+        return;
+    }
+    // フォーカスがない時だけ上書き（衝突防止）
+    if (!editor.hasFocus()) {
+        isInternalChange = true;
+        const cursor = editor.getCursor();
+        editor.setValue(remote);
+        editor.setCursor(cursor);
+        lastSyncedContent = remote;
+        isInternalChange = false;
+    }
 });
 
-// Editor -> Firebase
+// Firebase送信
 const saveToFirebase = () => {
-  const current = editor.getValue();
-  if (current === lastSyncedContent) return;
-  setDoc(memoDocRef, { content: current }, { merge: true })
-    .then(() => { lastSyncedContent = current; })
-    .catch(console.error);
+    const current = editor.getValue();
+    if (current === lastSyncedContent) return;
+    setDoc(memoDocRef, { content: current }, { merge: true })
+        .then(() => { lastSyncedContent = current; })
+        .catch(console.error);
 };
 
-// CodeMirrorのchangeイベントに準拠した保存処理
+// 変更監視
 editor.on("change", (cm, changeObj) => {
-  if (isInternalChange || changeObj.origin === "setValue") return;
-  if (saveTimeout) clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(saveToFirebase, 800);
+    if (isInternalChange || changeObj.origin === "setValue") return;
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveToFirebase, 800);
 });
