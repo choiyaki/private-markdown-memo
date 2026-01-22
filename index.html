@@ -10,50 +10,62 @@
 <style>
     body {
         margin: 0;
-        padding: 0;
         background: #282a36;
-        /* 全体スクロールを禁止 */
-        overflow: hidden;
         height: 100vh;
         display: flex;
         flex-direction: column;
     }
 
+    #editor-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        /* 下部のツールバーに隠れないよう余白を作る */
+        padding-bottom: 60px; 
+    }
+
     #toolbar {
-        flex-shrink: 0;
+        /* 初期位置は画面下部 */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 50px; /* 高さを固定して計算しやすく */
+        
         display: flex;
+        align-items: center;
         gap: 8px;
-        padding: 8px;
-        background: #282a36;
-        border-bottom: 1px solid #44475a;
+        padding: 0 10px;
+        background: #343746; /* 少し色を変えて区別 */
+        border-top: 1px solid #44475a;
+        z-index: 9999;
         overflow-x: auto;
     }
 
     #toolbar button {
-        height: 40px;
-        min-width: 50px;
+        height: 36px;
+        min-width: 44px;
         font-size: 18px;
         background: #44475a;
         color: white;
         border: none;
-        border-radius: 6px;
-    }
-
-    /* ここが重要：JSで高さを制御するため、初期値は適当でOK */
-    #editor-container {
-        flex-grow: 1;
-        overflow: hidden;
+        border-radius: 4px;
+        flex-shrink: 0;
     }
 
     .CodeMirror {
         height: 100% !important;
+        font-size: 16px;
     }
 </style>
 
 
+
 </head>
 <body>
-    <div id="toolbar">
+    <div id="editor-container">
+        <textarea id="editor"></textarea>
+    </div>
+		<div id="toolbar">
         <button id="outdent-btn">◀</button>
         <button id="indent-btn">▶</button>
         <span class="separator"></span>
@@ -61,10 +73,6 @@
         <button id="move-down-btn">▼</button>
         <span class="separator"></span>
         <button id="checkbox-btn">✅</button>
-    </div>
-
-    <div id="editor-container">
-        <textarea id="editor"></textarea>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
