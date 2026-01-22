@@ -6,65 +6,53 @@
     <title>Debug Memo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
-		<style>
-	    body {
-	        margin: 0;
-	        display: flex;
-	        flex-direction: column;
-	        height: 100vh;
-	        background: #282a36;
-	    }
-	
-	    #toolbar {
-	        /* 上部に固定する設定 */
-	        position: sticky;
-	        top: 0;
-	        z-index: 1000;
-	
-	        display: flex;
-	        gap: 8px;
-	        padding: 8px;
-	        background: #282a36;
-	        border-bottom: 1px solid #44475a;
-	        overflow-x: auto;
-	        flex-shrink: 0; /* ツールバーが潰れないように固定 */
-	    }
-	
-	    #toolbar button {
-	        /* 高さを 40px (以前の半分) に調整 */
-	        height: 40px; 
-	        min-width: 50px;
-	        font-size: 18px;
-	        background: #44475a;
-	        color: white;
-	        border: none;
-	        border-radius: 6px;
-	        cursor: pointer;
-	    }
-	
-	    #toolbar button:active {
-	        background: #6272a4;
-	    }
-	
-	    .separator {
-	        width: 1px;
-	        height: 25px;
-	        background: #44475a;
-	        align-self: center;
-	        margin: 0 4px;
-	    }
-	
-	    #editor-container {
-	        /* 残りの画面全体をエディタにする */
-	        flex-grow: 1;
-	        overflow: hidden; /* 二重スクロール防止 */
-	    }
-	
-	    .CodeMirror {
-	        height: 100% !important;
-	        font-size: 16px;
-	    }
-	</style>
+<style>
+    /* iOS特有の挙動を封じ込める設定 */
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        position: fixed; /* ページ全体のズレを防止 */
+        overflow: hidden;
+        background: #282a36;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 8px;
+        /* ノッチ（上部の欠け）対策 */
+        padding-top: calc(8px + env(safe-area-inset-top));
+        background: #282a36;
+        border-bottom: 1px solid #44475a;
+        overflow-x: auto;
+        flex-shrink: 0;
+    }
+
+    #toolbar button {
+        height: 40px; 
+        min-width: 50px;
+        font-size: 18px;
+        background: #44475a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+    }
+
+    #editor-container {
+        flex-grow: 1;
+        overflow-y: auto; /* スクロールはここだけ */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .CodeMirror {
+        height: 100% !important;
+    }
+</style>
+
 
 </head>
 <body>
