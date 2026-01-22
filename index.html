@@ -8,40 +8,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
 		
 <style>
-/* 画面全体を固定して、ブラウザの勝手なスクロールを防ぐ */
-/* 画面全体を固定して、ブラウザの勝手なスクロールを防ぐ */
+/* 1. 画面全体の固定（iOS Safariの暴走防止） */
 html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
-    position: fixed;
+    position: fixed; /* 全体を固定してスクロールさせない */
     overflow: hidden;
     display: flex;
     flex-direction: column;
     background: #282a36;
-    /* --- ここを追加 --- */
-    overscroll-behavior: none; 
+    overscroll-behavior: none; /* バウンス抑制 */
 }
 
-/* スクロール領域：ここだけが動く */
-
-#editor-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    /* transition は削除します */
-    background: #282a36;
-}
-
-
-/* ツールバー：上部に自然に配置 */
+/* 2. ツールバーの設定 */
 #toolbar {
     flex-shrink: 0;
     display: flex;
     gap: 8px;
     padding: 8px;
-    /* iPhoneのノッチ（カメラの欠け）を避ける */
+    /* iPhoneのノッチを考慮 */
     padding-top: calc(8px + env(safe-area-inset-top));
     background: #282a36;
     border-bottom: 1px solid #44475a;
@@ -57,34 +44,62 @@ html, body {
     color: white;
     border: none;
     border-radius: 6px;
+    flex-shrink: 0;
 }
 
-/* ぶら下げインデントの決定版（ネスト対応） */
-.CodeMirror-line pre.CodeMirror-line {
-  padding-left: 20px !important; /* 2行目以降のインデント幅 */
-  text-indent: -20px !important; /* 1行目を左に戻す */
+#toolbar .separator {
+    width: 1px;
+    background: #6272a4;
+    margin: 8px 4px;
 }
 
-/* CodeMirrorのインデント用スパン（空白）がある場合、
-   その空白までもが text-indent の影響を受けないように調整 
-*/
+/* 3. エディタコンテナ（ここだけがスクロールする） */
+#editor-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    background: #282a36;
+    /* 初期状態の余白（キーボードがない時） */
+    padding-bottom: 100px;
+}
 
+.CodeMirror {
+    height: 100% !important;
+    font-family: 'Fira Code', monospace;
+    font-size: 16px;
+}
+
+/* 4. ぶら下げインデント（ネスト対応）の実装 */
+/* 各行の左側に余白を作り、1行目だけ左に戻して揃える */
+.CodeMirror-line {
+    padding-left: 2.2em !important; 
+    text-indent: -1.7em !important;
+}
+
+/* CodeMirrorの内部構造に合わせた調整（インデント維持用） */
 .CodeMirror-line > span {
     display: inline-block;
     text-indent: 0; 
     vertical-align: top;
-    white-space: pre-wrap; /* 折り返しを許可 */
+    white-space: pre-wrap !important;
 }
 
-
-
-
-.CodeMirror {
-    /* Containerの高さに100%追従させる */
-    height: 100% !important;
+/* 記号（- やチェックボックス）の幅を揃えて文字開始位置を合わせる */
+.cm-formatting-list, 
+.cm-formatting-task {
+    display: inline-block;
+    width: 1.5em;
+    text-align: left;
+    text-indent: 0;
 }
 
+/* チェックボックス付きリストの微調整 */
+.cm-property, .cm-string.cm-property {
+    text-indent: 0;
+}
 </style>
+
 
 </head>
 <body>
