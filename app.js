@@ -20,26 +20,34 @@ window.addEventListener('scroll', lockViewport, { passive: false });
 
 if (window.visualViewport) {
     const container = document.getElementById('editor-container');
+    const toolbar = document.getElementById('toolbar');
 
     window.visualViewport.addEventListener('resize', () => {
+        // 「実際に見えている範囲」の高さ
         const viewHeight = window.visualViewport.height;
-        const fullHeight = window.innerHeight;
-        const keyboardHeight = fullHeight - viewHeight;
-
-        if (keyboardHeight > 100) { 
-            // キーボード出現時：
-            // keyboardHeight に「11行分（約300px）」の余裕をプラスします
-            const extraBuffer = 200; 
-            container.style.paddingBottom = `${keyboardHeight + extraBuffer}px`;
-        } else {
-            // キーボードが閉じている時も、少し余白（100px程度）があると
-            // 画面の下ギリギリにならず打ちやすいです
-            container.style.paddingBottom = '70px';
-        }
         
-        lockViewport(); 
+        // ツールバーの高さを取得（padding等も含めた高さ）
+        const toolbarHeight = toolbar.offsetHeight;
+
+        // エディタの新しい高さを計算（見えている範囲 - ツールバー）
+        const newHeight = viewHeight - toolbarHeight;
+
+        // 重要：paddingではなく、height（高さ）そのものを固定する
+        container.style.height = `${newHeight}px`;
+        container.style.flexGrow = '0'; // Flexboxによる自動伸縮を止める
+
+        // 画面のズレを強制リセット
+        window.scrollTo(0, 0);
+        
+        // エディタ（CodeMirror）にサイズ変更を通知
+        if (editor) {
+            editor.refresh();
+            // カーソル位置が隠れないようにスクロールさせる
+            editor.scrollIntoView(editor.getCursor());
+        }
     });
 }
+
 
 
 // フォーカス時にも強制リセット

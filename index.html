@@ -25,13 +25,13 @@ html, body {
 }
 
 /* スクロール領域：ここだけが動く */
+
 #editor-container {
     flex-grow: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    transition: padding-bottom 0.1s ease-out;
-    /* --- ここを追加 --- */
-    overscroll-behavior-y: contain; 
+    /* transition は削除します */
+    background: #282a36;
 }
 
 
@@ -60,6 +60,7 @@ html, body {
 }
 
 .CodeMirror {
+    /* Containerの高さに100%追従させる */
     height: 100% !important;
 }
 
