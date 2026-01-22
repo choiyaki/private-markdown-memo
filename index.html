@@ -8,55 +8,56 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
 		
 <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        /* 重要：ブラウザ全体のスクロールを禁止 */
-        height: 100%;
-        width: 100%;
-        overflow: hidden; 
-        position: fixed; 
-        background: #282a36;
-        display: flex;
-        flex-direction: column;
-    }
+/* 画面全体を固定して、ブラウザの勝手なスクロールを防ぐ */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    position: fixed; /* 全体を固定 */
+    overflow: hidden; /* 外側のスクロールを殺す */
+    display: flex;
+    flex-direction: column;
+    background: #282a36;
+}
 
-    #toolbar {
-        /* position: fixed ではなく、単なる flex の子要素として配置 */
-        flex-shrink: 0;
-        display: flex;
-        gap: 8px;
-        padding: 8px;
-        /* iOSのノッチ対策（重要） */
-        padding-top: calc(8px + env(safe-area-inset-top));
-        background: #282a36;
-        border-bottom: 1px solid #44475a;
-        overflow-x: auto;
-        /* 横スクロールを滑らかに */
-        -webkit-overflow-scrolling: touch;
-    }
+/* ツールバー：上部に自然に配置 */
+#toolbar {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    /* iPhoneのノッチ（カメラの欠け）を避ける */
+    padding-top: calc(8px + env(safe-area-inset-top));
+    background: #282a36;
+    border-bottom: 1px solid #44475a;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
 
-    #toolbar button {
-        height: 40px;
-        min-width: 50px;
-        font-size: 18px;
-        background: #44475a;
-        color: white;
-        border: none;
-        border-radius: 6px;
-    }
+#toolbar button {
+    height: 40px;
+    min-width: 50px;
+    font-size: 18px;
+    background: #44475a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+}
 
-    #editor-container {
-        /* ここだけがスクロール領域 */
-        flex-grow: 1;
-        overflow-y: auto;
-        /* iOSでのスクロールを滑らかにする */
-        -webkit-overflow-scrolling: touch;
-    }
+/* スクロール領域：ここだけが動く */
+#editor-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* キーボードが出た時にJSでここを広げます */
+    transition: padding-bottom 0.1s ease-out;
+}
 
-    .CodeMirror {
-        height: 100% !important;
-    }
+.CodeMirror {
+    height: 100% !important;
+}
+
 </style>
 
 </head>
@@ -75,12 +76,10 @@
         <textarea id="editor"></textarea>
     </div>
 
-    <div id="editor-container">
-        <textarea id="editor"></textarea>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
+    
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

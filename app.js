@@ -6,27 +6,37 @@ import { setupToolbar } from './toolbar-actions.js';
 const editor = initEditor();
 setupToolbar(editor);
 
-// app.js
+// --- iPhoneキーボード出現時のスクロール底上げ対策 ---
 
-// エディタの初期化後に以下を追加
-editor.on("focus", () => {
-    // ページ全体の意図しないスクロールを強制的に0に戻し続ける
-    const fixScroll = () => {
+if (window.visualViewport) {
+    const container = document.getElementById('editor-container');
+
+    window.visualViewport.addEventListener('resize', () => {
+        // キーボードを含まない「実際に見えている高さ」
+        const viewHeight = window.visualViewport.height;
+        // ブラウザ全体の高さ
+        const fullHeight = window.innerHeight;
+        // その差が「キーボードの高さ」
+        const keyboardHeight = fullHeight - viewHeight;
+
+        if (keyboardHeight > 100) { 
+            // キーボードが出た：コンテナの底にキーボード分のクッションを作る
+            container.style.paddingBottom = `${keyboardHeight}px`;
+        } else {
+            // キーボードが閉じた：余白を戻す
+            container.style.paddingBottom = '20px';
+        }
+        
+        // 画面全体が上にズレるのを強制的にリセット
         window.scrollTo(0, 0);
-    };
-    
-    // キーボードアニメーションに合わせて数回実行
-    setTimeout(fixScroll, 10);
-    setTimeout(fixScroll, 100);
-    setTimeout(fixScroll, 300);
+    });
+}
+
+// フォーカス時も全体がズレないよう保険をかける
+editor.on("focus", () => {
+    setTimeout(() => window.scrollTo(0, 0), 100);
 });
 
-// 入力時にも全体がズレないように監視
-window.addEventListener('scroll', (e) => {
-    if (window.scrollY !== 0) {
-        window.scrollTo(0, 0);
-    }
-}, { passive: false });
 
 
 let lastSyncedContent = "";
