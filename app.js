@@ -18,40 +18,35 @@ window.addEventListener('scroll', lockViewport, { passive: false });
 
 // app.js の該当箇所を修正
 
-window.visualViewport.addEventListener('resize', () => {
-    const viewHeight = window.visualViewport.height;
-    const fullHeight = window.innerHeight;
-    const toolbarHeight = toolbar.offsetHeight;
-    const keyboardHeight = fullHeight - viewHeight;
+If (window.visualViewport) {
+    const container = document.getElementById('editor-container');
+    const toolbar = document.getElementById('toolbar');
 
-    if (keyboardHeight > 100) { 
-        // 【キーボード表示時】
-        // 見えている範囲ちょうどに高さを縮める
-        container.style.height = `${viewHeight - toolbarHeight}px`;
-        container.style.paddingBottom = '20px'; // キーボード直上の最小余白
-    } else {
-        // 【キーボード非表示時】
-        // 画面いっぱいの高さに戻す
-        container.style.height = `${fullHeight - toolbarHeight}px`;
+    window.visualViewport.addEventListener('resize', () => {
+        // 「実際に見えている範囲」の高さ
+        const viewHeight = window.visualViewport.height;
         
-        // --- ここで下部の余白（空き地）を広げる ---
-        container.style.paddingBottom = '200px'; // ここを好きな数値に変更
-    }
+        // ツールバーの高さを取得（padding等も含めた高さ）
+        const toolbarHeight = toolbar.offsetHeight;
 
-    container.style.flexGrow = '0';
-    window.scrollTo(0, 0);
-    
-    if (editor) {
-        editor.refresh();
-        // キーボード表示時のみカーソルを追う
-        if (keyboardHeight > 100) {
+        // エディタの新しい高さを計算（見えている範囲 - ツールバー）
+        const newHeight = viewHeight - toolbarHeight;
+
+        // 重要：paddingではなく、height（高さ）そのものを固定する
+        container.style.height = `${newHeight}px`;
+        container.style.flexGrow = '0'; // Flexboxによる自動伸縮を止める
+
+        // 画面のズレを強制リセット
+        window.scrollTo(0, 0);
+        
+        // エディタ（CodeMirror）にサイズ変更を通知
+        if (editor) {
+            editor.refresh();
+            // カーソル位置が隠れないようにスクロールさせる
             editor.scrollIntoView(editor.getCursor());
         }
-    }
-});
-
-
-
+    });
+}
 
 // フォーカス時にも強制リセット
 editor.on("focus", () => {
