@@ -61,15 +61,13 @@ html, body {
 
 /* ぶら下げインデントの決定版（ネスト対応） */
 .CodeMirror-line {
-    padding-left: 2em !important; /* 記号分の幅を確保 */
-    text-indent: -1.5em !important; /* 1行目だけ戻す */
+  padding-left: 20px !important; /* 2行目以降のインデント幅 */
+  text-indent: -20px !important; /* 1行目を左に戻す */
 }
 
 /* CodeMirrorのインデント用スパン（空白）がある場合、
    その空白までもが text-indent の影響を受けないように調整 
 */
-
-
 
 .CodeMirror-line > span {
     display: inline-block;
