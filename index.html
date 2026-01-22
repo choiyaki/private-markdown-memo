@@ -2,34 +2,28 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Memo</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/gfm/gfm.min.js"></script>
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="toolbar">
-        <button id="outdent-btn" title="戻す">◀</button>
-        <button id="indent-btn" title="進める">▶</button>
+        <button id="outdent-btn">◀</button>
+        <button id="indent-btn">▶</button>
         <div class="separator"></div>
-        <button id="move-up-btn" title="上に移動">▲</button>
-        <button id="move-down-btn" title="下に移動">▼</button>
+        <button id="move-up-btn">▲</button>
+        <button id="move-down-btn">▼</button>
         <div class="separator"></div>
-        <button id="checkbox-btn" title="チェックボックス">☑</button>
+        <button id="checkbox-btn">☑</button>
     </div>
-
     <div id="editor-container">
         <textarea id="editor"></textarea>
     </div>
-
     <script type="module" src="app.js"></script>
-
 </body>
 </html>
