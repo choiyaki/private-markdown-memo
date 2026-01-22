@@ -8,64 +8,60 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
 		
 <style>
-    body {
+    html, body {
         margin: 0;
+        padding: 0;
+        /* 重要：ブラウザ全体のスクロールを禁止 */
+        height: 100%;
+        width: 100%;
+        overflow: hidden; 
+        position: fixed; 
         background: #282a36;
-        height: 100vh;
         display: flex;
         flex-direction: column;
     }
 
-    #editor-container {
-        flex-grow: 1;
-        overflow-y: auto;
-        /* 下部のツールバーに隠れないよう余白を作る */
-        padding-bottom: 60px; 
-    }
-
     #toolbar {
-        /* 初期位置は画面下部 */
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 50px; /* 高さを固定して計算しやすく */
-        
+        /* position: fixed ではなく、単なる flex の子要素として配置 */
+        flex-shrink: 0;
         display: flex;
-        align-items: center;
         gap: 8px;
-        padding: 0 10px;
-        background: #343746; /* 少し色を変えて区別 */
-        border-top: 1px solid #44475a;
-        z-index: 9999;
+        padding: 8px;
+        /* iOSのノッチ対策（重要） */
+        padding-top: calc(8px + env(safe-area-inset-top));
+        background: #282a36;
+        border-bottom: 1px solid #44475a;
         overflow-x: auto;
+        /* 横スクロールを滑らかに */
+        -webkit-overflow-scrolling: touch;
     }
 
     #toolbar button {
-        height: 36px;
-        min-width: 44px;
+        height: 40px;
+        min-width: 50px;
         font-size: 18px;
         background: #44475a;
         color: white;
         border: none;
-        border-radius: 4px;
-        flex-shrink: 0;
+        border-radius: 6px;
+    }
+
+    #editor-container {
+        /* ここだけがスクロール領域 */
+        flex-grow: 1;
+        overflow-y: auto;
+        /* iOSでのスクロールを滑らかにする */
+        -webkit-overflow-scrolling: touch;
     }
 
     .CodeMirror {
         height: 100% !important;
-        font-size: 16px;
     }
 </style>
 
-
-
 </head>
 <body>
-    <div id="editor-container">
-        <textarea id="editor"></textarea>
-    </div>
-		<div id="toolbar">
+    <div id="toolbar">
         <button id="outdent-btn">◀</button>
         <button id="indent-btn">▶</button>
         <span class="separator"></span>
@@ -73,6 +69,14 @@
         <button id="move-down-btn">▼</button>
         <span class="separator"></span>
         <button id="checkbox-btn">✅</button>
+    </div>
+
+    <div id="editor-container">
+        <textarea id="editor"></textarea>
+    </div>
+
+    <div id="editor-container">
+        <textarea id="editor"></textarea>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
