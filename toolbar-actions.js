@@ -1,22 +1,18 @@
 // toolbar-actions.js
 export function setupToolbar(editor) {
-    if (!editor) return;
+    if (!editor) return; // エディタが壊れている場合の保護
 
-    // インデント（右へ移動：タブを挿入）
     document.getElementById("indent-btn").addEventListener("click", () => {
-        // 現在の行、または選択範囲をインデントするCodeMirror標準コマンド
         editor.execCommand("indentMore");
         editor.focus();
     });
 
-    // アウトデント（左へ移動：タブを削除）
     document.getElementById("outdent-btn").addEventListener("click", () => {
-        // 現在の行、または選択範囲のインデントを減らすCodeMirror標準コマンド
         editor.execCommand("indentLess");
         editor.focus();
     });
 
-    // --- 上下移動（現状のまま維持） ---
+    // 上下移動
     document.getElementById("move-up-btn").addEventListener("click", () => {
         const { line } = editor.getCursor();
         if (line > 0) {
@@ -41,10 +37,10 @@ export function setupToolbar(editor) {
         editor.focus();
     });
 
-    // --- チェックボックス（現状のまま維持） ---
     document.getElementById("checkbox-btn").addEventListener("click", () => {
         const cursor = editor.getCursor();
         const lineText = editor.getLine(cursor.line);
+        // [ ] の切り替えのみ実行
         if (lineText.includes("[ ]")) {
             editor.replaceRange("[x]", {line: cursor.line, ch: lineText.indexOf("[ ]")}, {line: cursor.line, ch: lineText.indexOf("[ ]") + 3});
         } else if (lineText.includes("[x]")) {
