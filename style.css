@@ -8,37 +8,51 @@ body, html {
 #toolbar {
     display: flex;
     align-items: center;
-    gap: 12px;           /* ボタン間の距離を少し広げた */
+    gap: 12px;
     padding: 12px;
     background: #282a36;
-    border-bottom: 2px solid #44475a; /* 境界線を少し太く */
+    border-bottom: 2px solid #44475a;
     position: sticky;
     top: 0;
     z-index: 100;
     overflow-x: auto;
-    
-    /* エディタとの間隔を空ける */
-    margin-bottom: 15px; 
+    /* 高さを明示的に指定せず、ボタンに任せる */
+    height: auto; 
 }
 
-/* ボタンの大型化 */
+/* ボタンの大型化 - ここが反映されない場合は !important を試してください */
 #toolbar button {
     background: #44475a;
     color: #f8f8f2;
     border: none;
-    min-width: 55px;     /* 横幅も少しアップ */
-    height: 70px;        /* 高さを約2倍に（以前は38px〜44px程度） */
-    border-radius: 10px; /* 角丸を少し強調 */
-    font-size: 24px;     /* アイコンも大きくして見やすく */
+    min-width: 60px !important; /* 横幅 */
+    height: 80px !important;    /* 縦幅を思い切って大きく */
+    border-radius: 10px;
+    font-size: 28px;           /* アイコンも大きく */
     cursor: pointer;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    
-    /* タップした時のフィードバック */
-    transition: background 0.1s;
 }
+
+/* エディタコンテナの調整 */
+#editor-container {
+    /* ツールバーの下に余白を作る */
+    margin-top: 15px;
+    /* 高さを画面全体からツールバー分引く（flexを使うのが一番安全です） */
+    height: auto;
+    flex-grow: 1;
+}
+
+/* 親要素（body）をflexにして、ツールバー以外をエディタにする */
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+}
+
 
 #toolbar button:active {
     background: #6272a4; /* 押した時に色が変わるように */
