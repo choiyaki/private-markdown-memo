@@ -1,91 +1,78 @@
-/* ベースレイアウト */
-body, html {
-  margin: 0; padding: 0; height: 100%;
-  background-color: #282a36;
+/* 1. 画面全体の構造を Flexbox に変更 */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #282a36;
+    /* 縦に並べる設定 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 画面全体のスクロールを防ぎ、エディタ内だけスクロールさせる */
 }
 
-/* ツールバー全体の調整 */
+/* 2. ツールバーの設定（ボタンに合わせて高さが変わる） */
 #toolbar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 15px;      /* ボタン同士の間隔 */
+    padding: 15px;  /* ツールバー内の余白 */
     background: #282a36;
     border-bottom: 2px solid #44475a;
-    position: sticky;
-    top: 0;
     z-index: 100;
-    overflow-x: auto;
-    /* 高さを明示的に指定せず、ボタンに任せる */
-    height: auto; 
+    overflow-x: auto; /* 横に並びすぎたらスクロール */
+    flex-shrink: 0;   /* ツールバーが潰れないように固定 */
 }
 
-/* ボタンの大型化 - ここが反映されない場合は !important を試してください */
+/* 3. ボタンの大型化（!important で強制適用） */
 #toolbar button {
     background: #44475a;
     color: #f8f8f2;
     border: none;
-    min-width: 60px !important; /* 横幅 */
-    height: 80px !important;    /* 縦幅を思い切って大きく */
-    border-radius: 10px;
-    font-size: 28px;           /* アイコンも大きく */
+    min-width: 70px !important;  /* 横幅 */
+    height: 80px !important;     /* 縦幅：ここを大きくしました */
+    border-radius: 12px;
+    font-size: 30px !important;  /* アイコンのサイズ */
     cursor: pointer;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background 0.1s;
 }
-
-/* エディタコンテナの調整 */
-#editor-container {
-    /* ツールバーの下に余白を作る */
-    margin-top: 15px;
-    /* 高さを画面全体からツールバー分引く（flexを使うのが一番安全です） */
-    height: auto;
-    flex-grow: 1;
-}
-
-/* 親要素（body）をflexにして、ツールバー以外をエディタにする */
-body {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    margin: 0;
-}
-
 
 #toolbar button:active {
-    background: #6272a4; /* 押した時に色が変わるように */
+    background: #6272a4;
 }
 
-/* セパレーター（仕切り線）も高さに合わせる */
+/* 4. セパレーター（仕切り線） */
 .separator {
     border-left: 2px solid #44475a;
-    height: 40px;
+    height: 50px; /* ボタンに合わせて高く */
     margin: 0 5px;
 }
 
-
-.separator { border-left: 2px solid #44475a; height: 30px; margin: 0 5px; }
-
-/* エディタエリア */
+/* 5. エディタコンテナ（残りの画面すべてを占領） */
 #editor-container {
-  height: calc(100vh - 71px);
+    flex-grow: 1;    /* ツールバー以外の残りの高さをすべて使う */
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px; /* ツールバーとの隙間 */
 }
-
-/* ...（前回の設定を維持）... */
 
 .CodeMirror {
-    height: 100%;
-    cursor: text; /* 確実にテキストカーソルにする */
+    flex-grow: 1;    /* コンテナ内で最大まで広がる */
+    height: 100%;    /* これで画面下までエディタになります */
+    font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace !important;
+    font-size: 16px;
+    line-height: 1.6;
 }
 
-/* クラス名はそのまま、!importantを付けて確実に適用 */
+/* リスト用のぶら下げインデント設定（将来用） */
 .cm-hanging-indent {
-    padding-left: 5ch !important;
-    text-indent: -5ch !important;
+    padding-left: 4ch !important;
+    text-indent: -4ch !important;
 }
 
-
-/* 折り返し設定 */
-.CodeMirror-line { word-break: break-all; }
+.CodeMirror-line {
+    word-break: break-all;
+}
