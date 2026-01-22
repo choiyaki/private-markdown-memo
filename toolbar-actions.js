@@ -1,7 +1,8 @@
 // toolbar-actions.js
 export function setupToolbar(editor) {
-    if (!editor) return; // エディタが壊れている場合の保護
+    if (!editor) return;
 
+    // インデント調整
     document.getElementById("indent-btn").addEventListener("click", () => {
         editor.execCommand("indentMore");
         editor.focus();
@@ -37,15 +38,44 @@ export function setupToolbar(editor) {
         editor.focus();
     });
 
+    // ✅ チェックボックス・トグル機能（リスト → 未完了 → 完了 → 解除）
     document.getElementById("checkbox-btn").addEventListener("click", () => {
         const cursor = editor.getCursor();
-        const lineText = editor.getLine(cursor.line);
-        // [ ] の切り替えのみ実行
-        if (lineText.includes("[ ]")) {
-            editor.replaceRange("[x]", {line: cursor.line, ch: lineText.indexOf("[ ]")}, {line: cursor.line, ch: lineText.indexOf("[ ]") + 3});
-        } else if (lineText.includes("[x]")) {
-            editor.replaceRange("[ ]", {line: cursor.line, ch: lineText.indexOf("[x]")}, {line: cursor.line, ch: lineText.indexOf("[x]") + 3});
+        const line = cursor.line;
+        const lineContent = editor.getLine(line);
+
+        // 状態を判定するためのパターン
+        const patterns = {
+            todo: /^(\s*)[-*+]\s+\[ \]\s+/,         // "- [ ] "
+            done: /^(\s*)[-*+]\s+\[[xX]\]\s+/,      // "- [x] "
+            list: /^(\s*)[-*+]\s+/                  // "- " (単なるリスト)
+        };
+
+        let newLineContent = "";
+
+        if (patterns.todo.test(lineContent)) {
+            // 未完了 [ ] -> 完了 [x]
+            newLineContent = lineContent.replace(patterns.todo, '$1- [x] ');
+        } else if (patterns.done.test(lineContent)) {
+            // 完了 [x] -> 記号削除 (テキストのみ)
+            newLineContent = lineContent.replace(patterns.done, '$1');
+        } else if (patterns.list.test(lineContent)) {
+            // リスト - -> 未完了 [ ]
+            newLineContent = lineContent.replace(patterns.list, '$1- [ ] ');
+        } else {
+            // 何もなし -> リスト -
+            const indentMatch = lineContent.match(/^(\s*)/);
+            const indent = indentMatch ? indentMatch[1] : "";
+            newLineContent = indent + "- " + lineContent.trimStart();
         }
+
+        // 行全体を入れ替え
+        editor.replaceRange(
+            newLineContent,
+            { line: line, ch: 0 },
+            { line: line, ch: lineContent.length }
+        );
+        
         editor.focus();
     });
 }
