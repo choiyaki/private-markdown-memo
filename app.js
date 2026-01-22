@@ -44,3 +44,28 @@ editor.on("change", (cm, changeObj) => {
     if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(saveToFirebase, 800);
 });
+
+
+// app.js の末尾などに追加
+
+if (window.visualViewport) {
+    const toolbar = document.getElementById('toolbar');
+    const container = document.getElementById('editor-container');
+
+    window.visualViewport.addEventListener('resize', () => {
+        // キーボードを含まない「実際に見えている高さ」を取得
+        const viewHeight = window.visualViewport.height;
+        
+        // ツールバーの高さを差し引いた分をエディタの高さにする
+        const newHeight = viewHeight - toolbar.offsetHeight;
+        
+        // エディタコンテナの高さを強制的に書き換え
+        container.style.height = `${newHeight}px`;
+        
+        // 画面が勝手にスクロールするのを防ぐため、最上部へ強制移動
+        window.scrollTo(0, 0);
+        
+        // CodeMirrorにサイズ変更を通知
+        if (editor) editor.refresh();
+    });
+}
