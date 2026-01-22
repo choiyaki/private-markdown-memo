@@ -4,29 +4,36 @@ export function initEditor() {
         mode: "markdown",
         theme: "dracula",
         lineWrapping: true,
-        inputStyle: "contenteditable", // iPhoneでの文字入力を安定させる設定
+        inputStyle: "contenteditable",
         spellcheck: true,
-        // ここに Enter キーの特別な動きを追加しています
         extraKeys: {
             "Enter": (cm) => {
                 const cursor = cm.getCursor();
                 const lineContent = cm.getLine(cursor.line);
                 
-                // 行が「- 」や「* 」、チェックボックスで始まっているかチェック
-                const listMatch = lineContent.match(/^(\s*)([*+-]|\[[ xX]\])\s+/);
+                // 1. リスト（- ）やチェックボックス（- [ ] ）の両方に対応する正規表現
+                //    行頭のスペース、記号（-*+）、およびオプションのチェックボックス [ ] を取得
+                const listMatch = lineContent.match(/^(\s*)([*+-](?:\s\[[ xX]\])?|\[[ xX]\])\s+/);
 
                 if (listMatch) {
-                    // もし記号だけで中身が空なら、リストを終了して改行
-                    if (lineContent.trim() === listMatch[2]) {
+                    // 2. 記号だけで中身が空の状態で Enter を押したら、その行の記号を消してリスト終了
+                    //    （例： "- [ ] " だけの行で Enter を押すと普通の行に戻る）
+                    const prefixWithSpace = listMatch[0];
+                    if (lineContent === prefixWithSpace) {
                         cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
                         cm.execCommand("newlineAndIndent");
-                    } else {
-                        // 次の行に同じ記号（とインデント）をコピー
-                        const prefix = listMatch[0];
-                        cm.replaceSelection("\n" + prefix);
+                        return;
                     }
+
+                    // 3. 次の行に同じ接頭辞をコピー
+                    //    チェックボックスが [x] と入力済みでも、次の行は空の [ ] にしたい場合はここを調整
+                    let prefix = listMatch[0];
+                    if (prefix.includes('[x]') || prefix.includes('[X]')) {
+                        prefix = prefix.replace(/\[[xX]\]/, '[ ]');
+                    }
+                    
+                    cm.replaceSelection("\n" + prefix);
                 } else {
-                    // リストでない場合は普通の改行
                     cm.execCommand("newlineAndIndent");
                 }
             }
