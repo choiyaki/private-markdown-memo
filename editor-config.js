@@ -1,7 +1,7 @@
 export function initEditor() {
     const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
-        mode: "markdown",
+        mode: "text/plain",
         theme: "dracula",
         lineWrapping: true,
         inputStyle: "contenteditable",
