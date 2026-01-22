@@ -59,6 +59,18 @@ html, body {
     border-radius: 6px;
 }
 
+/* インデント（ぶら下げ）の設定 */
+.CodeMirror pre.CodeMirror-line {
+    /* 1行の左側に確保するスペース */
+    padding-left: 30px !important; 
+    /* 1行目だけを左に突き出させる（記号分を相殺する） */
+    text-indent: -30px !important;
+}
+
+/* 箇条書き記号やチェックボックスの微調整 */
+/* 必要に応じて数値を微調整してください */
+
+
 .CodeMirror {
     /* Containerの高さに100%追従させる */
     height: 100% !important;
