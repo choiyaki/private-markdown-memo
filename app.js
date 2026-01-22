@@ -1,49 +1,51 @@
-// app.js
 import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 import { initEditor } from './editor-config.js';
 import { setupToolbar } from './toolbar-actions.js';
 
+// 1. 初期化
 const editor = initEditor();
 setupToolbar(editor);
 
-// --- iPhoneキーボード出現時のスクロール底上げ対策 ---
+// 2. 画面外への逃げ防止（スクロールロック）
+const lockViewport = () => {
+    if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+    }
+};
 
+// 全体のスクロールを常に監視して 0 に戻す
+window.addEventListener('scroll', lockViewport, { passive: false });
+
+// 3. キーボード出現時の底上げ対策
 if (window.visualViewport) {
     const container = document.getElementById('editor-container');
 
     window.visualViewport.addEventListener('resize', () => {
-        // キーボードを含まない「実際に見えている高さ」
         const viewHeight = window.visualViewport.height;
-        // ブラウザ全体の高さ
         const fullHeight = window.innerHeight;
-        // その差が「キーボードの高さ」
         const keyboardHeight = fullHeight - viewHeight;
 
         if (keyboardHeight > 100) { 
-            // キーボードが出た：コンテナの底にキーボード分のクッションを作る
+            // キーボード出現時
             container.style.paddingBottom = `${keyboardHeight}px`;
         } else {
-            // キーボードが閉じた：余白を戻す
+            // キーボードなし
             container.style.paddingBottom = '20px';
         }
-        
-        // 画面全体が上にズレるのを強制的にリセット
-        window.scrollTo(0, 0);
+        lockViewport(); // リサイズ時も位置を強制リセット
     });
 }
 
-// フォーカス時も全体がズレないよう保険をかける
+// フォーカス時にも強制リセット
 editor.on("focus", () => {
-    setTimeout(() => window.scrollTo(0, 0), 100);
+    setTimeout(lockViewport, 100);
 });
 
-
-
+// 4. Firebase関連（以前のまま）
 let lastSyncedContent = "";
 let isInternalChange = false;
 let saveTimeout = null;
 
-// Firebase受信
 onSnapshot(memoDocRef, (doc) => {
     if (!doc.exists()) return;
     const remote = doc.data().content || "";
@@ -51,18 +53,14 @@ onSnapshot(memoDocRef, (doc) => {
         lastSyncedContent = remote;
         return;
     }
-    // フォーカスがない時だけ上書き（衝突防止）
     if (!editor.hasFocus()) {
         isInternalChange = true;
-        const cursor = editor.getCursor();
         editor.setValue(remote);
-        editor.setCursor(cursor);
         lastSyncedContent = remote;
         isInternalChange = false;
     }
 });
 
-// Firebase送信
 const saveToFirebase = () => {
     const current = editor.getValue();
     if (current === lastSyncedContent) return;
@@ -71,7 +69,6 @@ const saveToFirebase = () => {
         .catch(console.error);
 };
 
-// 変更監視
 editor.on("change", (cm, changeObj) => {
     if (isInternalChange || changeObj.origin === "setValue") return;
     if (saveTimeout) clearTimeout(saveTimeout);

@@ -9,17 +9,31 @@
 		
 <style>
 /* 画面全体を固定して、ブラウザの勝手なスクロールを防ぐ */
+/* 画面全体を固定して、ブラウザの勝手なスクロールを防ぐ */
 html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
-    position: fixed; /* 全体を固定 */
-    overflow: hidden; /* 外側のスクロールを殺す */
+    position: fixed;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     background: #282a36;
+    /* --- ここを追加 --- */
+    overscroll-behavior: none; 
 }
+
+/* スクロール領域：ここだけが動く */
+#editor-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transition: padding-bottom 0.1s ease-out;
+    /* --- ここを追加 --- */
+    overscroll-behavior-y: contain; 
+}
+
 
 /* ツールバー：上部に自然に配置 */
 #toolbar {
@@ -43,15 +57,6 @@ html, body {
     color: white;
     border: none;
     border-radius: 6px;
-}
-
-/* スクロール領域：ここだけが動く */
-#editor-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    /* キーボードが出た時にJSでここを広げます */
-    transition: padding-bottom 0.1s ease-out;
 }
 
 .CodeMirror {
