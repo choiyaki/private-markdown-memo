@@ -6,37 +6,66 @@
     <title>Debug Memo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
-    <style>
-        /* ここに直接書くことで、外部ファイルによるエラーを防ぎます */
-        #toolbar {
-            display: flex;
-            gap: 10px;
-            padding: 10px;
-            background: #282a36;
-            overflow-x: auto;
-        }
-        #toolbar button {
-            /* ここでサイズを大きくします */
-            height: 80px; 
-            min-width: 60px;
-            font-size: 24px;
-            background: #44475a;
-            color: white;
-            border: none;
-            border-radius: 8px;
-        }
-        .separator {
-            width: 2px;
-            height: 40px;
-            background: #44475a;
-            align-self: center;
-        }
-        #editor-container {
-            /* ツールバーの高さ(約100px)を除いた残りをエディタにする */
-            height: calc(100vh - 110px); 
-        }
-        .CodeMirror { height: 100%; }
-    </style>
+		<style>
+	    body {
+	        margin: 0;
+	        display: flex;
+	        flex-direction: column;
+	        height: 100vh;
+	        background: #282a36;
+	    }
+	
+	    #toolbar {
+	        /* 上部に固定する設定 */
+	        position: sticky;
+	        top: 0;
+	        z-index: 1000;
+	
+	        display: flex;
+	        gap: 8px;
+	        padding: 8px;
+	        background: #282a36;
+	        border-bottom: 1px solid #44475a;
+	        overflow-x: auto;
+	        flex-shrink: 0; /* ツールバーが潰れないように固定 */
+	    }
+	
+	    #toolbar button {
+	        /* 高さを 40px (以前の半分) に調整 */
+	        height: 40px; 
+	        min-width: 50px;
+	        font-size: 18px;
+	        background: #44475a;
+	        color: white;
+	        border: none;
+	        border-radius: 6px;
+	        cursor: pointer;
+	    }
+	
+	    #toolbar button:active {
+	        background: #6272a4;
+	    }
+	
+	    .separator {
+	        width: 1px;
+	        height: 25px;
+	        background: #44475a;
+	        align-self: center;
+	        margin: 0 4px;
+	    }
+	
+	    #editor-container {
+	        /* 残りの画面全体をエディタにする */
+	        flex-grow: 1;
+	        overflow: hidden; /* 二重スクロール防止 */
+	    }
+	
+	    .CodeMirror {
+	        height: 100% !important;
+	        font-size: 16px;
+	    }
+	</style>
+
 </head>
 <body>
     <div id="toolbar">
