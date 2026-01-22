@@ -1,36 +1,36 @@
-// editor-config.js
 export function initEditor() {
-    try {
-        const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-            lineNumbers: true,
-            mode: "gfm",
-            theme: "dracula",
-            lineWrapping: true,
-            inputStyle: "contenteditable",
-            tabSize: 4,
-            indentWithTabs: true, 
-            lineWiseCopyCut: true,
-            viewportMargin: Infinity,
-            // 複雑な独自コマンドを一度すべて外し、標準の挙動に戻します
-            extraKeys: {
-                "Tab": "indentMore",
-                "Shift-Tab": "indentLess"
-            }
-        });
+    const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+        lineNumbers: true,
+        mode: "markdown",
+        theme: "dracula",
+        lineWrapping: true,
+        inputStyle: "contenteditable", // iPhoneでの文字入力を安定させる設定
+        spellcheck: true,
+        // ここに Enter キーの特別な動きを追加しています
+        extraKeys: {
+            "Enter": (cm) => {
+                const cursor = cm.getCursor();
+                const lineContent = cm.getLine(cursor.line);
+                
+                // 行が「- 」や「* 」、チェックボックスで始まっているかチェック
+                const listMatch = lineContent.match(/^(\s*)([*+-]|\[[ xX]\])\s+/);
 
-        /* --- エラーの可能性がある描画ロジックを一時停止 ---
-        editor.on("renderLine", (cm, line, elt) => {
-            const isList = /^[\t]*[-*+] /.test(line.text);
-            if (isList) {
-                cm.addLineClass(line, "wrap", "cm-hanging-indent");
-            } else {
-                cm.removeLineClass(line, "wrap", "cm-hanging-indent");
+                if (listMatch) {
+                    // もし記号だけで中身が空なら、リストを終了して改行
+                    if (lineContent.trim() === listMatch[2]) {
+                        cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
+                        cm.execCommand("newlineAndIndent");
+                    } else {
+                        // 次の行に同じ記号（とインデント）をコピー
+                        const prefix = listMatch[0];
+                        cm.replaceSelection("\n" + prefix);
+                    }
+                } else {
+                    // リストでない場合は普通の改行
+                    cm.execCommand("newlineAndIndent");
+                }
             }
-        });
-        ----------------------------------------------- */
-
-        return editor;
-    } catch (e) {
-        console.error("Editor init error:", e);
-    }
+        }
+    });
+    return editor;
 }
