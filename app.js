@@ -16,7 +16,8 @@ const lockViewport = () => {
 // 全体のスクロールを常に監視して 0 に戻す
 window.addEventListener('scroll', lockViewport, { passive: false });
 
-// 3. キーボード出現時の底上げ対策
+// app.js の該当箇所を修正
+
 if (window.visualViewport) {
     const container = document.getElementById('editor-container');
 
@@ -26,15 +27,20 @@ if (window.visualViewport) {
         const keyboardHeight = fullHeight - viewHeight;
 
         if (keyboardHeight > 100) { 
-            // キーボード出現時
-            container.style.paddingBottom = `${keyboardHeight}px`;
+            // キーボード出現時：
+            // keyboardHeight に「11行分（約300px）」の余裕をプラスします
+            const extraBuffer = 300; 
+            container.style.paddingBottom = `${keyboardHeight + extraBuffer}px`;
         } else {
-            // キーボードなし
-            container.style.paddingBottom = '20px';
+            // キーボードが閉じている時も、少し余白（100px程度）があると
+            // 画面の下ギリギリにならず打ちやすいです
+            container.style.paddingBottom = '100px';
         }
-        lockViewport(); // リサイズ時も位置を強制リセット
+        
+        lockViewport(); 
     });
 }
+
 
 // フォーカス時にも強制リセット
 editor.on("focus", () => {
