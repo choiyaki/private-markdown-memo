@@ -18,7 +18,7 @@ window.addEventListener('scroll', lockViewport, { passive: false });
 
 // app.js の該当箇所を修正
 
-If (window.visualViewport) {
+if (window.visualViewport) {
     const container = document.getElementById('editor-container');
     const toolbar = document.getElementById('toolbar');
 
@@ -47,6 +47,8 @@ If (window.visualViewport) {
         }
     });
 }
+
+
 
 // フォーカス時にも強制リセット
 editor.on("focus", () => {
