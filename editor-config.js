@@ -1,36 +1,29 @@
 // editor-config.js
 export function initEditor() {
     try {
-        const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-            lineNumbers: true,
-            mode: "gfm",
-            theme: "dracula",
-            lineWrapping: true,
+        const textArea = document.getElementById("editor");
+        if (!textArea) {
+            console.error("TextArea not found!");
+            return null;
+        }
+
+        const editor = CodeMirror.fromTextArea(textArea, {
+            lineNumbers: true,      // 行番号を表示
+            mode: "gfm",            // GitHub Flavored Markdown
+            theme: "dracula",       // テーマ
+            lineWrapping: true,     // 折り返し
             inputStyle: "contenteditable",
             tabSize: 4,
-            indentWithTabs: true, 
-            lineWiseCopyCut: true,
-            viewportMargin: Infinity,
-            // 複雑な独自コマンドを一度すべて外し、標準の挙動に戻します
-            extraKeys: {
-                "Tab": "indentMore",
-                "Shift-Tab": "indentLess"
-            }
+            indentWithTabs: true,
+            viewportMargin: Infinity
         });
 
-        /* --- エラーの可能性がある描画ロジックを一時停止 ---
-        editor.on("renderLine", (cm, line, elt) => {
-            const isList = /^[\t]*[-*+] /.test(line.text);
-            if (isList) {
-                cm.addLineClass(line, "wrap", "cm-hanging-indent");
-            } else {
-                cm.removeLineClass(line, "wrap", "cm-hanging-indent");
-            }
-        });
-        ----------------------------------------------- */
+        // エディタが作成された直後にリフレッシュ（表示崩れ防止）
+        setTimeout(() => editor.refresh(), 100);
 
         return editor;
     } catch (e) {
-        console.error("Editor init error:", e);
+        console.error("CodeMirror initialization failed:", e);
+        return null;
     }
 }
