@@ -76,6 +76,29 @@ html, body {
     color: #1c1c1e;
 }
 
+/* 2. ぶら下げインデントの再定義 */
+.CodeMirror-line {
+    /* 全ての行を、インデントレベルに応じた分だけ右に寄せる */
+    /* 0.55em は 12px における半角スペースの幅に極めて近い数値です */
+    padding-left: calc(var(--indent-level, 0) * 1em + 1em) !important;
+    
+    /* 1行目だけ、CodeMirrorが挿入した「物理的な空白」の分だけ左に戻す */
+    /* これで「物理空白」と「padding」が相殺され、2行目と文頭が揃います */
+    text-indent: calc(var(--indent-level, 0) * -0.6em) !important;
+    
+    position: relative;
+    display: block;
+}
+
+/* 3. 本文が消えないよう、spanの設定をリセット */
+.CodeMirror-line > span {
+    display: inline;
+    width: auto !important;
+    opacity: 1 !important;
+    letter-spacing: normal !important;
+}
+
+
 
 </style>
 
