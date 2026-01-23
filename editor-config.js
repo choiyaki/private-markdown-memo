@@ -7,7 +7,7 @@ export function initEditor() {
         inputStyle: "contenteditable",
         spellcheck: false,
 				indentUnit: 1,
-				tabSize: 2,
+				tabSize: 1,
         extraKeys: {
             "Enter": (cm) => {
                 // ...（中略：前回のEnterキー補完ロジック）...
