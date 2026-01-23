@@ -1,6 +1,6 @@
 export function initEditor() {
     const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-        lineNumbers: true,
+        lineNumbers: false,
         mode: "markdown",
         theme: "default",
         lineWrapping: true,

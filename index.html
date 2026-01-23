@@ -108,11 +108,11 @@ html, body {
 .CodeMirror-line:has(.cm-link) {
     /* 全ての行を、インデントレベルに応じた分だけ右に寄せる */
     /* 0.55em は 12px における半角スペースの幅に極めて近い数値です */
-    padding-left: calc(var(--indent-level, 0) * 1em + 4.4em) !important;
+    padding-left: calc(var(--indent-level, 0) * 1em + 4.48em) !important;
     
     /* 1行目だけ、CodeMirrorが挿入した「物理的な空白」の分だけ左に戻す */
     /* これで「物理空白」と「padding」が相殺され、2行目と文頭が揃います */
-    text-indent: calc(var(--indent-level, 0) * -0.6em - 3.55em) !important;
+    text-indent: calc(var(--indent-level, 0) * -0.6em - 3.65em) !important;
     
     position: relative;
     display: block;
