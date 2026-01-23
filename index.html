@@ -66,7 +66,9 @@ html, body {
     padding-bottom: 100px;
 }
 
-/* CodeMirror defaultテーマの上書き */
+
+
+/* 1. フォントサイズと行の基本設定 */
 .CodeMirror {
     height: 100% !important;
     font-size: 14px;
@@ -74,34 +76,32 @@ html, body {
     color: #1c1c1e;
 }
 
-/* 4. JS+CSSによる動的ぶら下げインデント */
+/* 2. ぶら下げインデントの動的計算 */
 .CodeMirror-line {
-    /* JSから渡される --indent-level を使用 */
-    padding-left: calc(var(--indent-level, 0) * 20px + 23px) !important;
-    text-indent: -20px !important;
+    /* インデントレベルに応じた正確な余白（1.5emは1文字+余裕分） */
+    /* 物理的な空白を無視するため、ここだけで全ての幅を決めます */
+    padding-left: calc(var(--indent-level, 0) * 1.5em + 2.5em) !important;
+    text-indent: -1.8em !important;
     position: relative;
 }
 
-/* 行頭の物理的な余白を非表示化 */
-.CodeMirror-line > span:first-child {
+/* 3. 【最重要】行頭にある物理的な空白(&nbsp;)の幅をゼロにする */
+/* これにより、階層が深くても JS で計算した --indent-level だけが効くようになります */
+.CodeMirror-line > span:first-child:not(.cm-formatting) {
     display: inline-block;
-		width: 30px !important;
-    text-indent: 0;
+    width: 0 !important;
+    letter-spacing: -1em !important; /* 空白を物理的に潰す */
+    opacity: 0;                      /* 念のため見えないようにする */
 }
 
-/* リスト記号の色を少し薄くして読みやすくする */
-/*.cm-formatting-list, .cm-formatting-task {
+/* 4. 記号と文字の開始位置を固定 */
+.cm-formatting-list, .cm-formatting-task {
     display: inline-block;
-    width: 1.5em;
-    color: #8e8e93;
+    width: 1.4em;
     text-indent: 0;
+    text-align: left;
 }
-*/
-/* 完了済みタスクをグレーアウト＆打ち消し線 */
-/*.cm-property + .cm-string, .cm-string.cm-property {
-    color: #aeaeb2 !important;
-    text-decoration: line-through;
-}*/
+
 </style>
 
 
