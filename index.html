@@ -77,8 +77,8 @@ html, body {
 /* 4. JS+CSSによる動的ぶら下げインデント */
 .CodeMirror-line {
     /* JSから渡される --indent-level を使用 */
-    padding-left: calc(var(--indent-level, 0) * 20px + 1.7em) !important;
-    text-indent: -1.4em !important;
+    padding-left: calc(var(--indent-level, 0) * 20px + 20px) !important;
+    text-indent: -20px !important;
     position: relative;
 }
 
