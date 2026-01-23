@@ -6,7 +6,7 @@ export function initEditor() {
         lineWrapping: true,
         inputStyle: "contenteditable",
         spellcheck: false,
-				indentUnit: 2,
+				indentUnit: 1,
 				tabSize: 2,
         extraKeys: {
             "Enter": (cm) => {
