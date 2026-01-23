@@ -41,7 +41,7 @@ export function initEditor() {
         const spaceCount = match ? match[1].length : 0;
         
         // インデントの深さを計算 (スペース2つで1レベルとする場合)
-        const indentUnit = cm.getOption("indentUnit") || 2;
+        const indentUnit = cm.getOption("indentUnit") || 1;
         const level = spaceCount / indentUnit;
         
         // HTML要素（行）に直接CSS変数をセット
