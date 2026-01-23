@@ -76,31 +76,39 @@ html, body {
     color: #1c1c1e;
 }
 
-/* 2. ぶら下げインデントの動的計算 */
+/* 12px に最適化した ぶら下げ設定 */
 .CodeMirror-line {
-    /* インデントレベルに応じた正確な余白（1.5emは1文字+余裕分） */
-    /* 物理的な空白を無視するため、ここだけで全ての幅を決めます */
-    padding-left: calc(var(--indent-level, 0) * 1.5em + 2.5em) !important;
-    text-indent: -1.8em !important;
+    padding-left: calc(var(--indent-level, 0) * 1.2em + 2.4em) !important;
+    text-indent: -1.6em !important;
     position: relative;
 }
 
-/* 3. 【最重要】行頭にある物理的な空白(&nbsp;)の幅をゼロにする */
-/* これにより、階層が深くても JS で計算した --indent-level だけが効くようになります */
-.CodeMirror-line > span:first-child:not(.cm-formatting) {
-    /*display: inline-block;*/
-    /* width: 0 !important;*/
-    /*letter-spacing: -1em !important;  空白を物理的に潰す */
-    /*opacity: 0; */                     /* 念のため見えないようにする */
+/* 改良版：行頭の物理的な空白(&nbsp;)だけを潰す */
+/* 「クラスを一切持たないspan」または「特定のインデント用スパン」を対象にする */
+.CodeMirror-line > span:first-child:not([class]),
+.CodeMirror-line > span.cm-overlay {
+    display: inline-block;
+    width: 0 !important;
+    letter-spacing: -1em !important;
+    opacity: 0;
 }
 
-/* 4. 記号と文字の開始位置を固定 */
-.cm-formatting-list, .cm-formatting-task {
-    display: inline-block;
-    width: 1.4em;
+/* リスト記号（cm-variable-2, 3 など）が消えないように明示的に保護 */
+.cm-variable-2, .cm-variable-3, .cm-keyword, .cm-formatting {
+    display: inline-block !important;
+    width: auto !important;
+    letter-spacing: normal !important;
+    opacity: 1 !important;
     text-indent: 0;
+}
+
+/* 記号の位置を固定する */
+.cm-variable-2, .cm-variable-3, .cm-formatting-list, .cm-formatting-task {
+    width: 1.4em;
     text-align: left;
 }
+
+
 
 </style>
 
