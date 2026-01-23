@@ -70,6 +70,22 @@ html, body {
     font-size: 16px;
 }
 
+/* ぶら下げインデントの動的計算 */
+.CodeMirror-line {
+    /* (インデントの深さ + リスト記号分) × 幅 */
+    /* 1.5em は記号（- ）分の固定幅です */
+    padding-left: calc(var(--indent-level) * 1.5em + 2.5em) !important;
+    text-indent: -2.0em !important;
+    position: relative;
+}
+
+/* 行頭の &nbsp; 自体は見えないように飛ばすか、幅をゼロにする */
+/* これをしないと &nbsp; の幅と padding-left が二重にかかってしまいます */
+.CodeMirror-line > span:first-child {
+    /* 行頭の空白を含むスパンのみ、text-indentの影響を制御 */
+}
+
+
 </style>
 
 

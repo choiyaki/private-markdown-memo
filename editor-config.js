@@ -4,42 +4,48 @@ export function initEditor() {
         mode: "markdown",
         theme: "dracula",
         lineWrapping: true,
-        inputStyle: "contenteditable", // iOSでの入力を安定させる
-        spellcheck: false,             // 赤い下線を防ぐ
-        
-        // Enterキーの挙動をカスタマイズ（リスト自動継続）
+        inputStyle: "contenteditable",
+        spellcheck: false,
         extraKeys: {
             "Enter": (cm) => {
+                // ...（中略：前回のEnterキー補完ロジック）...
                 const cursor = cm.getCursor();
                 const lineContent = cm.getLine(cursor.line);
-                
-                // リスト（- ）やチェックボックス（- [ ] ）を判定する正規表現
                 const listMatch = lineContent.match(/^(\s*)([*+-](?:\s\[[ xX]\])?|\[[ xX]\])\s+/);
-
                 if (listMatch) {
-                    // もし記号だけで中身が空なら、Enterでリストを終了して通常の行に戻す
                     const prefixWithSpace = listMatch[0];
                     if (lineContent === prefixWithSpace) {
                         cm.replaceRange("", {line: cursor.line, ch: 0}, {line: cursor.line, ch: lineContent.length});
                         cm.execCommand("newlineAndIndent");
                         return;
                     }
-
-                    // 次の行に同じ接頭辞をコピー
-                    // 完了済み [x] の場合でも、次の行は未完了 [ ] から始める
                     let prefix = listMatch[0];
                     if (prefix.includes('[x]') || prefix.includes('[X]')) {
                         prefix = prefix.replace(/\[[xX]\]/, '[ ]');
                     }
-                    
                     cm.replaceSelection("\n" + prefix);
                 } else {
-                    // リストでない場合は通常の改行
                     cm.execCommand("newlineAndIndent");
                 }
             }
         }
     });
+
+    // --- ここから追加：インデント深さをCSS変数に渡すロジック ---
+    editor.on("renderLine", (cm, line, elt) => {
+        const text = line.text;
+        // 行頭の空白文字をカウント
+        const match = text.match(/^(\s*)/);
+        const spaceCount = match ? match[1].length : 0;
+        
+        // インデントの深さを計算 (スペース2つで1レベルとする場合)
+        const indentUnit = cm.getOption("indentUnit") || 2;
+        const level = spaceCount / indentUnit;
+        
+        // HTML要素（行）に直接CSS変数をセット
+        elt.style.setProperty('--indent-level', level);
+    });
+    // --- ここまで ---
 
     return editor;
 }
