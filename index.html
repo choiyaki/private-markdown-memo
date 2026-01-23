@@ -88,9 +88,9 @@ html, body {
 /* 3. 【最重要】行頭にある物理的な空白(&nbsp;)の幅をゼロにする */
 /* これにより、階層が深くても JS で計算した --indent-level だけが効くようになります */
 .CodeMirror-line > span:first-child:not(.cm-formatting) {
-    display: inline-block;
+    /*display: inline-block;*/
     /* width: 0 !important;*/
-    letter-spacing: -1em !important; /* 空白を物理的に潰す */
+    /*letter-spacing: -1em !important;  空白を物理的に潰す */
     /*opacity: 0; */                     /* 念のため見えないようにする */
 }
 
