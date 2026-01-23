@@ -70,29 +70,32 @@ html, body {
     font-size: 16px;
 }
 
-/* 4. ぶら下げインデント（ネスト対応）の実装 */
-/* 各行の左側に余白を作り、1行目だけ左に戻して揃える */
+/* 行全体の基本設定 */
 .CodeMirror-line {
-    padding-left: 2.2em !important; 
-    text-indent: -1.7em !important;
+    /* 行全体を右に寄せ、折り返し後の文頭位置をここに固定する */
+    padding-left: 2.5em !important; 
+    position: relative;
 }
 
-/* CodeMirrorの内部構造に合わせた調整（インデント維持用） */
-.CodeMirror-line > span {
-    display: inline-block;
-    text-indent: 0; 
-    vertical-align: top;
-    white-space: pre-wrap !important;
-}
-
-/* 記号（- やチェックボックス）の幅を揃えて文字開始位置を合わせる */
+/* 箇条書き記号（-）やチェックボックスのパーツだけを左に浮かせる */
 .cm-formatting-list, 
-.cm-formatting-task {
-    display: inline-block;
-    width: 1.5em;
-    text-align: left;
-    text-indent: 0;
+.cm-formatting-task,
+.cm-variable-3 {
+    position: absolute;
+    /* 1行目の中で、無理やり左側に配置する */
+    left: 0;
+    /* 記号の幅を固定して、文字開始位置を一定にする */
+    width: 2.2em;
+    text-align: right;
+    padding-right: 0.3em;
 }
+
+/* 実際の文字部分はそのまま流す（インデント分の空白も保持される） */
+.CodeMirror-line > span {
+    display: inline;
+    white-space: pre; /* CodeMirrorの空白を維持 */
+}
+
 
 /* チェックボックス付きリストの微調整 */
 .cm-property, .cm-string.cm-property {
