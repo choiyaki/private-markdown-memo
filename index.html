@@ -8,85 +8,101 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
 		
 <style>
-/* 1. 画面全体の固定（iOS Safariの暴走防止） */
+/* 1. 画面全体の固定（ライトテーマ） */
 html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
-    position: fixed; /* 全体を固定してスクロールさせない */
+    position: fixed;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    background: #282a36;
-    overscroll-behavior: none; /* バウンス抑制 */
+    background: #f5f5f7; /* iPhone風の薄いグレー */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* 2. ツールバーの設定 */
+/* 2. ツールバー（ライトテーマ用） */
 #toolbar {
     flex-shrink: 0;
     display: flex;
     gap: 8px;
     padding: 8px;
-    /* iPhoneのノッチを考慮 */
     padding-top: calc(8px + env(safe-area-inset-top));
-    background: #282a36;
-    border-bottom: 1px solid #44475a;
+    background: #ffffff;
+    border-bottom: 1px solid #d1d1d6;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
 #toolbar button {
-    height: 40px;
-    min-width: 50px;
-    font-size: 18px;
-    background: #44475a;
-    color: white;
-    border: none;
-    border-radius: 6px;
+    height: 36px;
+    min-width: 44px;
+    font-size: 16px;
+    background: #f2f2f7;
+    color: #007aff; /* iOS標準のブルー */
+    border: 1px solid #d1d1d6;
+    border-radius: 8px;
     flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+#toolbar button:active {
+    background: #e5e5ea;
 }
 
 #toolbar .separator {
     width: 1px;
-    background: #6272a4;
-    margin: 8px 4px;
+    background: #d1d1d6;
+    margin: 6px 2px;
 }
 
-/* 3. エディタコンテナ（ここだけがスクロールする） */
+/* 3. エディタコンテナ */
 #editor-container {
     flex-grow: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    background: #282a36;
-    /* 初期状態の余白（キーボードがない時） */
+    background: #ffffff;
     padding-bottom: 100px;
 }
 
+/* CodeMirror defaultテーマの上書き */
 .CodeMirror {
     height: 100% !important;
-    font-family: 'Fira Code', monospace;
     font-size: 16px;
+    line-height: 1.6;
+    color: #1c1c1e;
 }
 
-/* ぶら下げインデントの動的計算 */
+/* 4. JS+CSSによる動的ぶら下げインデント */
 .CodeMirror-line {
-    /* (インデントの深さ + リスト記号分) × 幅 */
-    /* 1.5em は記号（- ）分の固定幅です */
-    padding-left: calc(var(--indent-level) * 1.5em + 2.5em) !important;
+    /* JSから渡される --indent-level を使用 */
+    padding-left: calc(var(--indent-level, 0) * 1.2em + 2.5em) !important;
     text-indent: -2.0em !important;
     position: relative;
 }
 
-/* 行頭の &nbsp; 自体は見えないように飛ばすか、幅をゼロにする */
-/* これをしないと &nbsp; の幅と padding-left が二重にかかってしまいます */
+/* 行頭の物理的な余白を非表示化 */
 .CodeMirror-line > span:first-child {
-    /* 行頭の空白を含むスパンのみ、text-indentの影響を制御 */
+    display: inline-block;
+    text-indent: 0;
 }
 
+/* リスト記号の色を少し薄くして読みやすくする */
+.cm-formatting-list, .cm-formatting-task {
+    display: inline-block;
+    width: 1.5em;
+    color: #8e8e93;
+    text-indent: 0;
+}
 
+/* 完了済みタスクをグレーアウト＆打ち消し線 */
+.cm-property + .cm-string, .cm-string.cm-property {
+    color: #aeaeb2 !important;
+    text-decoration: line-through;
+}
 </style>
+
 
 
 </head>
