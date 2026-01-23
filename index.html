@@ -84,13 +84,13 @@ html, body {
 }
 
 /* 改良版：行頭の物理的な空白(&nbsp;)だけを潰す */
-/* 「クラスを一切持たないspan」または「特定のインデント用スパン」を対象にする */
+/* 「クラスを一切持たないspan」または「特定のインデント用スパン」を対象にする 
 .CodeMirror-line > span:first-child:not(.cm-variable-2, .cm-variable-3) {
     display: inline-block;
     width: 0 !important;
     letter-spacing: -1em !important;
     opacity: 0;
-}
+} */
 
 /* リスト記号（cm-variable-2, 3 など）が消えないように明示的に保護 */
 .cm-variable-2, .cm-variable-3 {
