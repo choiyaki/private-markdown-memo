@@ -77,7 +77,7 @@ html, body {
 /* 4. JS+CSSによる動的ぶら下げインデント */
 .CodeMirror-line {
     /* JSから渡される --indent-level を使用 */
-    padding-left: calc(var(--indent-level, 0) * 20px + 20px) !important;
+    padding-left: calc(var(--indent-level, 0) * 20px + 23px) !important;
     text-indent: -20px !important;
     position: relative;
 }
@@ -89,18 +89,18 @@ html, body {
 }
 
 /* リスト記号の色を少し薄くして読みやすくする */
-.cm-formatting-list, .cm-formatting-task {
+/*.cm-formatting-list, .cm-formatting-task {
     display: inline-block;
     width: 1.5em;
     color: #8e8e93;
     text-indent: 0;
 }
-
+*/
 /* 完了済みタスクをグレーアウト＆打ち消し線 */
-.cm-property + .cm-string, .cm-string.cm-property {
+/*.cm-property + .cm-string, .cm-string.cm-property {
     color: #aeaeb2 !important;
     text-decoration: line-through;
-}
+}*/
 </style>
 
 
