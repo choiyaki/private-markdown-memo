@@ -180,6 +180,15 @@ if (sendBtn) {
         };
     }
 
+// initEditorの中で
+editor.on("focus", () => {
+    document.body.classList.add("keyboard-open");
+});
+
+editor.on("blur", () => {
+    document.body.classList.remove("keyboard-open");
+});
+
 
     return editor;
 }
