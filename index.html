@@ -89,7 +89,7 @@ html, body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: #ffffff;
-    padding-bottom: 50px;
+    padding-bottom: 20px;
 }
 
 
@@ -165,10 +165,23 @@ html, body {
     border-top: 1px solid #d1d1d6;
     display: flex;
     align-items: center;
-    justify-content: center; /* ボタンを中央寄せ（お好みで右寄せも可） */
-    padding-bottom: env(safe-area-inset-bottom); /* iPhone下部の余白対応 */
+    justify-content: center;
+    padding-bottom: env(safe-area-inset-bottom);
     z-index: 10;
+    
+    /* --- ここを追加 --- */
+    transition: margin-bottom 0.2s ease-out; /* 動きをスムーズに */
+    margin-bottom: 0; 
 }
+
+/* キーボードが出たとき用のスタイル（クラスで制御） */
+.keyboard-open #footer-toolbar {
+    /* キーボードの上にさらに100pxの隙間を作る */
+    margin-bottom: 100px;
+    /* キーボードの上ではiPhoneのセーフエリア（バーの余白）は不要なので0にする */
+    padding-bottom: 0;
+}
+
 
 #footer-toolbar button {
     height: 36px;
@@ -179,16 +192,6 @@ html, body {
     border-radius: 8px;
     font-size: 15px;
     font-weight: 600;
-}
-
-/* 既存のエディタコンテナの余白を調整 */
-#editor-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background: #ffffff;
-    /* フッターがあるので padding-bottom は控えめでOK */
-    padding-bottom: 20px;
 }
 
 
@@ -218,8 +221,11 @@ html, body {
         <textarea id="editor"></textarea>
     </div>
 		<div id="footer-toolbar">
-        <button id="footer-action-btn">Done</button>
-    </div>
+    <button id="footer-action-btn">Done</button>
+</div>
+
+<div id="footer-bottom-spacer"></div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
     
