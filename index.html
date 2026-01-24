@@ -135,7 +135,7 @@ html, body {
 
 
 /* 2. ぶら下げインデントの再定義 */
-.CodeMirror-line:has(.cm-variable-2, .cm-comment) {
+.CodeMirror-line:has(.cm-variable-2, .cm-variable-3, .cm-comment) {
     /* 全ての行を、インデントレベルに応じた分だけ右に寄せる */
     /* 0.55em は 12px における半角スペースの幅に極めて近い数値です */
     padding-left: calc(var(--indent-level, 0) * 1em + 2em) !important;
@@ -189,6 +189,7 @@ html, body {
         <textarea id="editor"></textarea>
 				<div id="toolbar">
 				<div class="spacer"></div>
+				<button id="diary-block-btn">📓</button>
     		<button id="select-block-btn">📝</button>
 				<span class="separator"></span>
 				<button id="paste-btn">📋</button>

@@ -79,5 +79,137 @@ export function setupToolbar(editor) {
         editor.focus();
     });
 		
+
+    // --- ブロック選択・送信 (📝) ---
+    const selectBtn = document.getElementById('select-block-btn');
+    if (selectBtn) {
+        selectBtn.addEventListener("click", () => {
+            const titleField = document.getElementById('title-field');
+            const cursor = editor.getCursor();
+            const lastLine = editor.lineCount() - 1;
+
+            let startLine = cursor.line;
+            let endLine = cursor.line;
+
+            // 1. 上方向に境界を探索
+            for (let i = cursor.line; i >= 0; i--) {
+                const content = editor.getLine(i).trim();
+                if (content === "" || content.startsWith("#")) {
+                    startLine = i + 1;
+                    break;
+                }
+                if (i === 0) startLine = 0;
+            }
+
+            // 2. 下方向に境界を探索
+            for (let i = cursor.line; i <= lastLine; i++) {
+                const content = editor.getLine(i).trim();
+                if (content === "" || content.startsWith("#")) {
+                    endLine = i - 1;
+                    break;
+                }
+                if (i === lastLine) endLine = lastLine;
+            }
+
+            // 3. ブロックの先頭に「📝」を挿入
+            const firstLineText = editor.getLine(startLine);
+            if (!firstLineText.startsWith("📝")) {
+                editor.replaceRange("📝", { line: startLine, ch: 0 });
+            }
+
+            // 4. テキスト取得と成形
+            let blockTexts = [];
+            for (let i = startLine; i <= endLine; i++) {
+                blockTexts.push(editor.getLine(i));
+            }
+            // リストの「- 」を削除して整形
+            const blockText = blockTexts.join("\n").replace(/\- /g, " ");
+
+            // 5. URL組み立てと遷移
+            const datePart = titleField ? titleField.value : "";
+            const scrapboxPageTitle = encodeURIComponent(`${datePart}日誌`);
+            const scrapboxBody = encodeURIComponent(blockText);
+            
+            const url = `sbporter://scrapbox.io/choiyaki/${scrapboxPageTitle}?body=${scrapboxBody}`;
+            window.location.href = url;
+            
+            editor.focus();
+        });
+    }
+		
+		
+		// --- ブロック選択・送信 (📓) ---
+    const diaryBtn = document.getElementById('diary-block-btn');
+    if (diaryBtn) {
+        diaryBtn.addEventListener("click", () => {
+            const titleField = document.getElementById('title-field');
+            const cursor = editor.getCursor();
+            const lastLine = editor.lineCount() - 1;
+
+            let startLine = cursor.line;
+            let endLine = cursor.line;
+
+            // 1. 上方向に境界を探索
+            for (let i = cursor.line; i >= 0; i--) {
+                const content = editor.getLine(i).trim();
+                if (content === "" || content.startsWith("#")) {
+                    startLine = i + 1;
+                    break;
+                }
+                if (i === 0) startLine = 0;
+            }
+
+            // 2. 下方向に境界を探索
+            for (let i = cursor.line; i <= lastLine; i++) {
+                const content = editor.getLine(i).trim();
+                if (content === "" || content.startsWith("#")) {
+                    endLine = i - 1;
+                    break;
+                }
+                if (i === lastLine) endLine = lastLine;
+            }
+
+            // 4. テキスト取得と成形
+            let blockTexts = [];
+            for (let i = startLine; i <= endLine; i++) {
+                blockTexts.push(editor.getLine(i));
+            }
+            // リストの「- 」を削除して整形
+            const blockText = blockTexts.join("\n").replace(/\- /g, " ");
+						
+						// 3. ブロックの先頭に「📓」を挿入
+            const firstLineText = editor.getLine(startLine);
+            if (!firstLineText.startsWith("📓")) {
+                editor.replaceRange("📓", { line: startLine, ch: 0 });
+            }
+
+            // 5. URL組み立てと遷移
+            const datePart = titleField ? titleField.value : "";
+            const scrapboxPageTitle = encodeURIComponent(`${datePart}`);
+            const scrapboxBody = encodeURIComponent(blockText);
+            
+            const url = `touch-https://scrapbox.io/choidiary/${scrapboxPageTitle}?body=${scrapboxBody}`;
+            window.location.href = url;
+            
+            editor.focus();
+        });
+    }
+
+    // --- ペースト (📋) ---
+    const pasteBtn = document.getElementById('paste-btn');
+    if (pasteBtn) {
+        pasteBtn.addEventListener("click", async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    editor.replaceSelection(text);
+                    editor.focus();
+                }
+            } catch (err) {
+                console.error('ペースト失敗:', err);
+            }
+        });
+    }
+
 		
 }
