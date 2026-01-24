@@ -57,7 +57,7 @@ if (selectBtn) {
         for (let i = cursor.line; i >= 0; i--) {
             const content = editor.getLine(i).trim();
             if (content === "" || content.startsWith("#")) {
-                startLine = i - 1;
+                startLine = i + 1;
                 break;
             }
             if (i === 0) startLine = 0;
@@ -67,10 +67,18 @@ if (selectBtn) {
         for (let i = cursor.line; i <= lastLine; i++) {
             const content = editor.getLine(i).trim();
             if (content === "" || content.startsWith("#")) {
-                endLine = i;
+                endLine = i - 1;
                 break;
             }
             if (i === lastLine) endLine = lastLine;
+        }
+				
+				// 3. ブロックの先頭に「📝」を挿入する
+        // 既に挿入されていないかチェックしてから挿入すると、二重挿入を防げます
+        const firstLineText = editor.getLine(startLine);
+        if (!firstLineText.startsWith("📝")) {
+            // startLineの0文字目から、何も消さずに「📝」を挿入
+            editor.replaceRange("📝", { line: startLine, ch: 0 });
         }
 
         // 3. ブロックのテキストを取得（範囲内の行を結合）
@@ -78,7 +86,7 @@ if (selectBtn) {
         for (let i = startLine; i <= endLine; i++) {
             blockTexts.push(editor.getLine(i));
         }
-        const blockText = blockTexts.join("\n");
+        const blockText = blockTexts.join("\n").replace(/\- /g," ");
 
         // 4. URLの組み立て
         // テキストフィールドの値をタイトルの一部として使用
@@ -86,12 +94,31 @@ if (selectBtn) {
         const scrapboxPageTitle = encodeURIComponent(`${datePart}日誌`);
         const scrapboxBody = encodeURIComponent(blockText);
         
-        const url = `https://scrapbox.io/choiyaki/${scrapboxPageTitle}?body=${scrapboxBody}`;
+        const url = `sbporter://scrapbox.io/choiyaki/${scrapboxPageTitle}?body=${scrapboxBody}`;
 
         // 5. URLを開く
-        window.open(url, '_blank');
+        window.location.href = url;
     };
 }
+
+    const pasteBtn = document.getElementById('paste-btn');
+    if (pasteBtn) {
+        pasteBtn.onclick = async () => {
+            try {
+                // クリップボードからテキストを読み取り
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    // カーソルの現在位置にテキストを挿入
+                    editor.replaceSelection(text);
+                    // フォーカスをエディタに戻す
+                    editor.focus();
+                }
+            } catch (err) {
+                console.error('ペーストに失敗しました:', err);
+                alert('クリップボードへのアクセスを許可してください');
+            }
+        };
+    }
 
 
     return editor;
