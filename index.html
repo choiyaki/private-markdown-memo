@@ -89,7 +89,7 @@ html, body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: #ffffff;
-    padding-bottom: 100px;
+    padding-bottom: 50px;
 }
 
 
@@ -157,6 +157,41 @@ html, body {
 }
 
 
+/* 4. フッターツールバーの設定 */
+#footer-toolbar {
+    flex-shrink: 0;
+    height: 50px;
+    background: #ffffff;
+    border-top: 1px solid #d1d1d6;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* ボタンを中央寄せ（お好みで右寄せも可） */
+    padding-bottom: env(safe-area-inset-bottom); /* iPhone下部の余白対応 */
+    z-index: 10;
+}
+
+#footer-toolbar button {
+    height: 36px;
+    padding: 0 20px;
+    background: #007aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* 既存のエディタコンテナの余白を調整 */
+#editor-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #ffffff;
+    /* フッターがあるので padding-bottom は控えめでOK */
+    padding-bottom: 20px;
+}
+
+
 
 </style>
 
@@ -168,7 +203,8 @@ html, body {
     </div>
     <div id="toolbar">
 				<div class="spacer"></div>
-    		<button id="select-block-btn">📝</button>
+				<button id="send-choidiary">📓</button>
+    		<button id="send-choiyaki">📝</button>
 				<span class="separator"></span>
 				<button id="paste-btn">📋</button>
 				<button id="checkbox-btn">✔️</button>
@@ -181,7 +217,9 @@ html, body {
     <div id="editor-container">
         <textarea id="editor"></textarea>
     </div>
-
+		<div id="footer-toolbar">
+        <button id="footer-action-btn">Done</button>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
     
