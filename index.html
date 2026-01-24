@@ -28,43 +28,37 @@ html, body {
     background: #ffffff;
     padding: 8px 12px;
     /* セーフエリアの余白をここへ移動 */
-    padding-top: calc(env(safe-area-inset-top));
+    padding-top: calc(8px + env(safe-area-inset-top));
     display: flex;
     align-items: center;
 }
 
-/* 2. テキストフィールドの幅を固定または調整 */
+/* 追加: テキストフィールドのスタイル */
 #title-field {
-    width: 120px; /* 中央に置くので、広すぎない適切な幅に */
-    height: 28px;
-    padding: 0 8px;
-    font-size: 14px;
+    width: 100%;
+    height: 30px;
+    padding: 0 6px;
+    font-size: 16px;
     background: #f2f2f7;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     outline: none;
     color: #1c1c1e;
-    font-weight: 700;
-    text-align: center;
-}
-
-/* Doneボタン専用のスタイル（もし他と分けたい場合） */
-#footer-action-btn {
-    font-weight: 600;
-    color: #007aff;
+		font-weight: 700;
+		text-align: center;
 }
 
 /* 2. ツールバー（ライトテーマ用） */
 #toolbar {
     flex-shrink: 0;
     display: flex;
-    align-items: center; /* 垂直中央 */
     gap: 8px;
-    padding: 8px 12px;
-    /* セーフエリア（ノッチ）対策をこちらに適用 */
-    padding-top: calc(8px + env(safe-area-inset-top));
+    padding: 8px;
+    padding-top: 8px
     background: #ffffff;
     border-bottom: 1px solid #d1d1d6;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 #toolbar button {
@@ -163,72 +157,18 @@ html, body {
 }
 
 
-/* 4. フッターツールバーの設定 */
-#footer-toolbar {
-    flex-shrink: 0;
-    display: flex;
-    gap: 8px;
-		height: 30px;
-    padding: 4px;
-    padding-top: 4px
-    background: #ffffff;
-    border-top: 1px solid #d1d1d6;
-    overflow-x: auto;
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 10;
-    
-    /* --- ここを追加 --- */
-    transition: margin-bottom 0.2s ease-out; /* 動きをスムーズに */
-    margin-bottom: 0;
-		display: none;
-}
-
-/* キーボードが出たとき用のスタイル（クラスで制御） */
-.keyboard-open #footer-toolbar {
-    /* キーボードの上にさらに100pxの隙間を作る */
-		display: flex;
-    margin-bottom: 380px;
-    /* キーボードの上ではiPhoneのセーフエリア（バーの余白）は不要なので0にする */
-    padding-bottom: 0;
-}
-
-
-#footer-toolbar button {
-    height: 27px;
-    min-width: 35px;
-    font-size: 14px;
-    background: #f2f2f7;
-    color: #007aff; /* iOS標準のブルー */
-    border: 1px solid #d1d1d6;
-    border-radius: 8px;
-    flex-shrink: 0;
-    transition: background 0.2s;
-}
-
-
 
 </style>
 
 
 </head>
 <body>
-		    <div id="toolbar">
-        <div class="spacer"></div>
-        
+		<div id="header-container">
         <input type="text" id="title-field" placeholder="日付">
-        
-        <div class="spacer"></div>
-        
-        <button id="footer-action-btn">Done</button>
     </div>
-
-    <div id="editor-container">
-        <textarea id="editor"></textarea>
-    </div>
-		<div id="footer-toolbar">
+    <div id="toolbar">
 				<div class="spacer"></div>
-				<button id="send-choidiary">📓</button>
-    		<button id="send-choiyaki">📝</button>
+    		<button id="select-block-btn">📝</button>
 				<span class="separator"></span>
 				<button id="paste-btn">📋</button>
 				<button id="checkbox-btn">✔️</button>
@@ -236,9 +176,11 @@ html, body {
         <button id="indent-btn">▶</button>
         <button id="move-up-btn">▲</button>
         <button id="move-down-btn">▼</button>
-</div>
+    </div>
 
-<div id="footer-bottom-spacer"></div>
+    <div id="editor-container">
+        <textarea id="editor"></textarea>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
