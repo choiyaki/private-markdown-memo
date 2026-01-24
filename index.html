@@ -22,13 +22,39 @@ html, body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* 追加: ヘッダーコンテナのスタイル */
+#header-container {
+    flex-shrink: 0;
+    background: #ffffff;
+    padding: 8px 12px;
+    /* セーフエリアの余白をここへ移動 */
+    padding-top: calc(8px + env(safe-area-inset-top));
+    display: flex;
+    align-items: center;
+}
+
+/* 追加: テキストフィールドのスタイル */
+#title-field {
+    width: 100%;
+    height: 30px;
+    padding: 0 6px;
+    font-size: 16px;
+    background: #f2f2f7;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    color: #1c1c1e;
+		font-weight: 700;
+		text-align: center;
+}
+
 /* 2. ツールバー（ライトテーマ用） */
 #toolbar {
     flex-shrink: 0;
     display: flex;
     gap: 8px;
     padding: 8px;
-    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-top: 8px
     background: #ffffff;
     border-bottom: 1px solid #d1d1d6;
     overflow-x: auto;
@@ -36,9 +62,9 @@ html, body {
 }
 
 #toolbar button {
-    height: 36px;
-    min-width: 44px;
-    font-size: 16px;
+    height: 27px;
+    min-width: 35px;
+    font-size: 14px;
     background: #f2f2f7;
     color: #007aff; /* iOS標準のブルー */
     border: 1px solid #d1d1d6;
@@ -126,22 +152,29 @@ html, body {
     letter-spacing: normal !important;
 }
 
+.spacer {
+    flex-grow: 1; /* 利用可能なスペースをすべて占有して、後ろの要素を押し出す */
+}
+
 
 
 </style>
 
 
-
 </head>
 <body>
+		<div id="header-container">
+        <input type="text" id="title-field" placeholder="日付">
+    </div>
     <div id="toolbar">
+				<div class="spacer"></div>
+    		<button id="select-block-btn">📝</button>
+				<span class="separator"></span>
+				<button id="checkbox-btn">✔️</button>
         <button id="outdent-btn">◀</button>
         <button id="indent-btn">▶</button>
-        <span class="separator"></span>
         <button id="move-up-btn">▲</button>
         <button id="move-down-btn">▼</button>
-        <span class="separator"></span>
-        <button id="checkbox-btn">✅</button>
     </div>
 
     <div id="editor-container">

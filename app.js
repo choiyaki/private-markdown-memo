@@ -6,6 +6,27 @@ import { setupToolbar } from './toolbar-actions.js';
 const editor = initEditor();
 setupToolbar(editor);
 
+// 1. タイトル要素の取得
+const titleField = document.getElementById('title-field');
+
+// 2. ページ読み込み時に保存された内容を復元
+window.addEventListener('DOMContentLoaded', () => {
+    const savedTitle = localStorage.getItem('memo_title');
+    if (savedTitle) {
+        titleField.value = savedTitle;
+    }
+});
+
+// 3. 入力されるたびに保存（同期）
+titleField.addEventListener('input', () => {
+    const currentTitle = titleField.value;
+    localStorage.setItem('memo_title', currentTitle);
+    
+    // 必要であれば、ここでページタイトル(ブラウザのタブ名)も更新
+    document.title = currentTitle || "Debug Memo";
+});
+
+
 // 2. 画面外への逃げ防止（スクロールロック）
 const lockViewport = () => {
     if (window.scrollY !== 0) {
