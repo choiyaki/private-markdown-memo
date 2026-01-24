@@ -78,4 +78,6 @@ export function setupToolbar(editor) {
         
         editor.focus();
     });
+		
+		
 }
