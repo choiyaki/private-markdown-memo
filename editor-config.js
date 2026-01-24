@@ -181,6 +181,7 @@ if (sendBtn) {
     }
 
 // initEditorの中で
+
 editor.on("focus", () => {
     document.body.classList.add("keyboard-open");
 });

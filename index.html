@@ -33,32 +33,38 @@ html, body {
     align-items: center;
 }
 
-/* 追加: テキストフィールドのスタイル */
+/* 2. テキストフィールドの幅を固定または調整 */
 #title-field {
-    width: 100%;
-    height: 30px;
-    padding: 0 6px;
-    font-size: 16px;
+    width: 120px; /* 中央に置くので、広すぎない適切な幅に */
+    height: 28px;
+    padding: 0 8px;
+    font-size: 14px;
     background: #f2f2f7;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     outline: none;
     color: #1c1c1e;
-		font-weight: 700;
-		text-align: center;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Doneボタン専用のスタイル（もし他と分けたい場合） */
+#footer-action-btn {
+    font-weight: 600;
+    color: #007aff;
 }
 
 /* 2. ツールバー（ライトテーマ用） */
 #toolbar {
     flex-shrink: 0;
     display: flex;
+    align-items: center; /* 垂直中央 */
     gap: 8px;
-    padding: 8px;
-    padding-top: 8px
+    padding: 8px 12px;
+    /* セーフエリア（ノッチ）対策をこちらに適用 */
+    padding-top: calc(8px + env(safe-area-inset-top));
     background: #ffffff;
     border-bottom: 1px solid #d1d1d6;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 #toolbar button {
@@ -173,12 +179,14 @@ html, body {
     
     /* --- ここを追加 --- */
     transition: margin-bottom 0.2s ease-out; /* 動きをスムーズに */
-    margin-bottom: 0; 
+    margin-bottom: 0;
+		display: none;
 }
 
 /* キーボードが出たとき用のスタイル（クラスで制御） */
 .keyboard-open #footer-toolbar {
     /* キーボードの上にさらに100pxの隙間を作る */
+		display: flex;
     margin-bottom: 412px;
     /* キーボードの上ではiPhoneのセーフエリア（バーの余白）は不要なので0にする */
     padding-bottom: 0;
@@ -204,11 +212,14 @@ html, body {
 
 </head>
 <body>
-		<div id="header-container">
+		    <div id="toolbar">
+        <div class="spacer"></div>
+        
         <input type="text" id="title-field" placeholder="日付">
-    </div>
-    <div id="toolbar">
-			<button id="footer-action-btn">Done</button>
+        
+        <div class="spacer"></div>
+        
+        <button id="footer-action-btn">Done</button>
     </div>
 
     <div id="editor-container">
