@@ -160,12 +160,14 @@ html, body {
 /* 4. フッターツールバーの設定 */
 #footer-toolbar {
     flex-shrink: 0;
-    height: 35px;
-    background: #ffffff;
-    border-top: 1px solid #d1d1d6;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    gap: 8px;
+		height: 30px;
+    padding: 4px;
+    padding-top: 4px
+    background: #ffffff;
+    border-bottom: 1px solid #d1d1d6;
+    overflow-x: auto;
     padding-bottom: env(safe-area-inset-bottom);
     z-index: 10;
     
@@ -177,21 +179,22 @@ html, body {
 /* キーボードが出たとき用のスタイル（クラスで制御） */
 .keyboard-open #footer-toolbar {
     /* キーボードの上にさらに100pxの隙間を作る */
-    margin-bottom: 420px;
+    margin-bottom: 412px;
     /* キーボードの上ではiPhoneのセーフエリア（バーの余白）は不要なので0にする */
     padding-bottom: 0;
 }
 
 
 #footer-toolbar button {
-    height: 28px;
-    padding: 0 20px;
-    background: #007aff;
-    color: white;
-    border: none;
+    height: 27px;
+    min-width: 35px;
+    font-size: 14px;
+    background: #f2f2f7;
+    color: #007aff; /* iOS標準のブルー */
+    border: 1px solid #d1d1d6;
     border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
+    flex-shrink: 0;
+    transition: background 0.2s;
 }
 
 
@@ -205,6 +208,13 @@ html, body {
         <input type="text" id="title-field" placeholder="日付">
     </div>
     <div id="toolbar">
+			<button id="footer-action-btn">Done</button>
+    </div>
+
+    <div id="editor-container">
+        <textarea id="editor"></textarea>
+    </div>
+		<div id="footer-toolbar">
 				<div class="spacer"></div>
 				<button id="send-choidiary">📓</button>
     		<button id="send-choiyaki">📝</button>
@@ -215,13 +225,6 @@ html, body {
         <button id="indent-btn">▶</button>
         <button id="move-up-btn">▲</button>
         <button id="move-down-btn">▼</button>
-    </div>
-
-    <div id="editor-container">
-        <textarea id="editor"></textarea>
-    </div>
-		<div id="footer-toolbar">
-    <button id="footer-action-btn">Done</button>
 </div>
 
 <div id="footer-bottom-spacer"></div>
