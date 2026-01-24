@@ -166,7 +166,10 @@ html, body {
 /* 4. フッターツールバーの設定 */
 #footer-toolbar {
     flex-shrink: 0;
-    display: flex;
+    position: fixed;
+		bottom: 0;
+    left: 0;
+    width: 100%;
     gap: 8px;
 		height: 30px;
     padding: 4px;
@@ -187,9 +190,10 @@ html, body {
 .keyboard-open #footer-toolbar {
     /* キーボードの上にさらに100pxの隙間を作る */
 		display: flex;
-    margin-bottom: 400px;
+		transform: translateY(-390px);
+    /*margin-bottom: 390px;*/
     /* キーボードの上ではiPhoneのセーフエリア（バーの余白）は不要なので0にする */
-    padding-bottom: 0;
+    /*padding-bottom: 0;*/
 }
 
 
