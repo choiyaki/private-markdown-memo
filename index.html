@@ -90,23 +90,13 @@ html, body {
 }
 
 /* 3. エディタコンテナ */
-/*#editor-container {
+#editor-container {
     flex-grow: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: #ffffff;
     padding-bottom: 0px;
-}*/
-
-/* 親要素であるエディタコンテナを基準に設定 */
-#editor-container {
-    flex-grow: 1;
-    position: relative; /* これが重要：子要素の基準点になります */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background: #ffffff;
 }
-
 
 
 
@@ -173,32 +163,34 @@ html, body {
 }
 
 
-
 /* 4. フッターツールバーの設定 */
 #footer-toolbar {
-    /* 通常時は非表示 */
-    display: none; 
-
-    /* エディタコンテナの底に張り付く設定 */
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    
-    height: 40px;
-    padding: 0 8px;
-    background: rgba(255, 255, 255, 0.95);
-    border-top: 1px solid #d1d1d6;
-    align-items: center;
-    gap: 8px;
-    z-index: 100; /* エディタより上に表示 */
-}
-
-/* キーボード表示時のみ display を flex に（位置の移動はしない） */
-.keyboard-open #footer-toolbar {
+    flex-shrink: 0;
     display: flex;
+    gap: 8px;
+		height: 30px;
+    padding: 4px;
+    padding-top: 4px
+    background: #ffffff;
+    border-top: 1px solid #d1d1d6;
+    overflow-x: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 10;
+    
+    /* --- ここを追加 --- */
+    transition: margin-bottom 0.2s ease-out; /* 動きをスムーズに */
+    margin-bottom: 0;
+		display: none;
 }
 
+/* キーボードが出たとき用のスタイル（クラスで制御） */
+.keyboard-open #footer-toolbar {
+    /* キーボードの上にさらに100pxの隙間を作る */
+		display: flex;
+    margin-bottom: 350px;
+    /* キーボードの上ではiPhoneのセーフエリア（バーの余白）は不要なので0にする */
+    padding-bottom: 0;
+}
 
 
 #footer-toolbar button {
@@ -232,7 +224,7 @@ html, body {
 
     <div id="editor-container">
         <textarea id="editor"></textarea>
-    
+    </div>
 		<div id="footer-toolbar">
 				<div class="spacer"></div>
 				<button id="send-choidiary">📓</button>
@@ -244,7 +236,6 @@ html, body {
         <button id="indent-btn">▶</button>
         <button id="move-up-btn">▲</button>
         <button id="move-down-btn">▼</button>
-				</div>
 </div>
 
 <div id="footer-bottom-spacer"></div>
