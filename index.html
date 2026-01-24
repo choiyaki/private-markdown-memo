@@ -28,7 +28,7 @@ html, body {
     background: #ffffff;
     padding: 8px 12px;
     /* セーフエリアの余白をここへ移動 */
-    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-top: calc(env(safe-area-inset-top));
     display: flex;
     align-items: center;
 }
@@ -95,7 +95,7 @@ html, body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: #ffffff;
-    padding-bottom: 20px;
+    padding-bottom: 0px;
 }
 
 
@@ -172,7 +172,7 @@ html, body {
     padding: 4px;
     padding-top: 4px
     background: #ffffff;
-    border-bottom: 1px solid #d1d1d6;
+    border-top: 1px solid #d1d1d6;
     overflow-x: auto;
     padding-bottom: env(safe-area-inset-bottom);
     z-index: 10;
@@ -187,7 +187,7 @@ html, body {
 .keyboard-open #footer-toolbar {
     /* キーボードの上にさらに100pxの隙間を作る */
 		display: flex;
-    margin-bottom: 412px;
+    margin-bottom: 320px;
     /* キーボードの上ではiPhoneのセーフエリア（バーの余白）は不要なので0にする */
     padding-bottom: 0;
 }
