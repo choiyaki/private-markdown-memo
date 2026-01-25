@@ -26,13 +26,14 @@ titleField.addEventListener('input', () => {
     document.title = currentTitle || "Debug Memo";
 });
 
-
+/*
 // 2. 画面外への逃げ防止（スクロールロック）
 const lockViewport = () => {
     if (window.scrollY !== 0) {
         window.scrollTo(0, 0);
     }
 };
+
 
 // 全体のスクロールを常に監視して 0 に戻す
 window.addEventListener('scroll', lockViewport, { passive: false });
@@ -74,6 +75,8 @@ if (window.visualViewport) {
 editor.on("focus", () => {
     setTimeout(lockViewport, 100);
 });
+*/
+
 
 // 4. Firebase関連（以前のまま）
 let lastSyncedContent = "";

@@ -1,144 +1,130 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Debug Memo</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
-		
-<style>
-/* 1. 画面全体の固定（ライトテーマ） */
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    position: fixed;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: #f5f5f7; /* iPhone風の薄いグレー */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-		overflow: hidden;
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+  <title>Debug Memo</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			overscroll-behavior: none;
+    }
+
+    /* ===== ヘッダー ===== */
+    #header-container {
+      position: fixed;
+      top: env(safe-area-inset-top);
+      left: 0;
+      right: 0;
+      height: 30px;
+      padding: 8px 12px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #d1d1d6;
+      z-index: 1000;
+      transform: translateZ(0);
+    }
+
+    .header-side {
+      width: 44px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    #title-field {
+      flex-grow: 1;
+      max-width: 200px;
+      height: 30px;
+      padding: 0 6px;
+      font-size: 16px;
+      background: #f2f2f7;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+      color: #1c1c1e;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    #export-all-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      padding: 4px;
+      color: #007aff;
+      cursor: pointer;
+    }
+
+    /* ===== ツールバー ===== */
+    #toolbar {
+      position: fixed;
+      top: calc(48px + env(safe-area-inset-top));
+      left: 0;
+      right: 0;
+      height: 30px;
+      display: flex;
+      gap: 8px;
+      padding: 4px;
+      background: #f5f5f7;
+      border-bottom: 1px solid #d1d1d6;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      z-index: 900;
+    }
+
+    #toolbar button {
+      height: 27px;
+      min-width: 35px;
+      font-size: 14px;
+      background: #f2f2f7;
+      color: #007aff;
+      border: 1px solid #d1d1d6;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    #toolbar .separator {
+      width: 1px;
+      background: #d1d1d6;
+      margin: 6px 2px;
+    }
+
+    .spacer {
+      flex-grow: 1;
+    }
+
+    /* ===== エディタ ===== */
+   #editor-container {
+  position: absolute;
+  top: calc(88px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  bottom: 0;          /* ← これを基準にする */
+  background: #ffffff;
+  overflow: hidden;
+	overscroll-behavior: none;
 }
 
-
-#header-container {
-    flex-shrink: 0;
-    background: #ffffff;
-    padding: 8px 12px;
-    padding-top: calc(8px + env(safe-area-inset-top));
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* 両端と中央に配置 */
-    border-bottom: 1px solid #d1d1d6;
-}
-
-.header-side {
-    width: 44px; /* 右側のボタンの幅に合わせる */
-    display: flex;
-    justify-content: flex-end;
-}
-
-#title-field {
-    flex-grow: 1; /* 余白を埋める */
-    max-width: 200px; /* 広がりすぎないよう制限 */
-    height: 30px;
-    padding: 0 6px;
-    font-size: 16px;
-    background: #f2f2f7;
-    border: none;
-    border-radius: 5px;
-    outline: none;
-    color: #1c1c1e;
-    font-weight: 700;
-    text-align: center;
-}
-
-#export-all-btn {
-    background: none;
-    border: none;
-    font-size: 20px;
-    padding: 4px;
-    color: #007aff;
-    cursor: pointer;
-}
-
-
-
-/* 2. ツールバー（ライトテーマ用） */
-#toolbar {
-    flex-shrink: 0;
-		display: flex;
-    gap: 8px;
-    padding: 8px;
-    padding-top: 8px
-    background: #f5f5f7 !important;
-    border-top: 1px solid #d1d1d6;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-		transition: padding-bottom 0.2s ease-out;
-}
-
-#toolbar button {
-    height: 27px;
-    min-width: 35px;
-    font-size: 14px;
-    background: #f2f2f7;
-    color: #007aff; /* iOS標準のブルー */
-    border: 1px solid #d1d1d6;
-    border-radius: 8px;
-    flex-shrink: 0;
-    transition: background 0.2s;
-		opacity: 0;
-}
-
-.keyboard-open #toolbar button {
-	opacity: 1;
-}
-
-#toolbar button:active {
-    background: #e5e5ea;
-}
-
-#toolbar .separator {
-    width: 1px;
-    background: #d1d1d6;
-    margin: 6px 2px;
-}
-
-/* 3. エディタコンテナ */
-#editor-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background: #ffffff;
-    padding-bottom: 0px;
-		transition: padding-bottom 0.2s ease-out;
-		overscroll-behavior-y: none;
-}
-
-
-
-/* 1. フォントサイズと行の基本設定 */
-.CodeMirror {
-    height: 90% !important;
-    font-size: 14px;
-    line-height: 1.6;
-    color: #1c1c1e;
-}
-
-.keyboard-open .CodeMirror {
-	height: 85% !important;
-}
-
-/* CodeMirrorの内部スクロールに対しても同様に設定 */
-.CodeMirror-scroll {
-    overscroll-behavior: none;
-}
-
-.CodeMirror-line {
+    .CodeMirror {
+      height: 100% !important;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+		.CodeMirror-line {
     /* 全ての行を、インデントレベルに応じた分だけ右に寄せる */
     /* 0.55em は 12px における半角スペースの幅に極めて近い数値です */
     padding-left: calc(var(--indent-level, 0) * 1em + 0.7em) !important;
@@ -187,46 +173,58 @@ html, body {
     opacity: 1 !important;
     letter-spacing: normal !important;
 }
-
-.spacer {
-    flex-grow: 1; /* 利用可能なスペースをすべて占有して、後ろの要素を押し出す */
-}
-
-
-
-</style>
-
+  </style>
 </head>
+
 <body>
-		
-		<div id="header-container">
-    <div class="header-side"></div> <input type="text" id="title-field" placeholder="日付">
+
+  <div id="header-container">
+    <div class="header-side"></div>
+    <input type="text" id="title-field" placeholder="日付">
     <div class="header-side">
-        <button id="export-all-btn">📤</button>
+      <button id="export-all-btn">📤</button>
     </div>
-</div>
+  </div>
 
+  <div id="toolbar">
+    <div class="spacer"></div>
+    <button id="diary-block-btn">📓</button>
+    <button id="select-block-btn">📝</button>
+    <span class="separator"></span>
+    <button id="paste-btn">📋</button>
+    <button id="checkbox-btn">✔️</button>
+    <button id="outdent-btn">◀</button>
+    <button id="indent-btn">▶</button>
+    <button id="move-up-btn">▲</button>
+    <button id="move-down-btn">▼</button>
+  </div>
 
-    <div id="editor-container">
-        <textarea id="editor"></textarea>
-				<div id="toolbar">
-				<div class="spacer"></div>
-				<button id="diary-block-btn">📓</button>
-    		<button id="select-block-btn">📝</button>
-				<span class="separator"></span>
-				<button id="paste-btn">📋</button>
-				<button id="checkbox-btn">✔️</button>
-        <button id="outdent-btn">◀</button>
-        <button id="indent-btn">▶</button>
-        <button id="move-up-btn">▲</button>
-        <button id="move-down-btn">▼</button>
-    </div>
-    </div>
+  <div id="editor-container">
+    <textarea id="editor"></textarea>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
-    
-    <script type="module" src="app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
+
+  <!-- 既存のロジック -->
+  <script type="module" src="app.js"></script>
+
+  <!-- iOS PWA キーボード対策 -->
+  <script>
+    const header = document.getElementById('header-container');
+    const toolbar = document.getElementById('toolbar');
+
+    function fixForKeyboard() {
+      if (!window.visualViewport) return;
+      const offset = window.visualViewport.offsetTop;
+      header.style.transform = `translateY(${offset}px)`;
+      toolbar.style.transform = `translateY(${offset}px)`;
+    }
+
+    window.visualViewport?.addEventListener('resize', fixForKeyboard);
+    window.visualViewport?.addEventListener('scroll', fixForKeyboard);
+    fixForKeyboard();
+  </script>
+
 </body>
-
 </html>
