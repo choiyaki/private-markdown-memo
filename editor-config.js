@@ -69,7 +69,7 @@ export function initEditor() {
   editorContainer.style.bottom = `${keyboardOverlap}px`;
 
   // ★ refreshだけ。scrollはしない
-  editor.refresh();
+  //editor.refresh();
 }
 
   window.visualViewport?.addEventListener("resize", resizeEditorForKeyboard);
