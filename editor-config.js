@@ -63,14 +63,12 @@ export function initEditor() {
   let keyboardOverlap =
     window.innerHeight - (vv.height + vv.offsetTop);
 
-  // ★ オーバースクロール対策（ここが核心）
   if (keyboardOverlap < 0) keyboardOverlap = 0;
-
-  // ★ 異常値のときは更新しない
   if (keyboardOverlap > window.innerHeight) return;
 
   editorContainer.style.bottom = `${keyboardOverlap}px`;
 
+  // ★ refreshだけ。scrollはしない
   editor.refresh();
 }
 
@@ -82,34 +80,37 @@ export function initEditor() {
   /* =====================================================
      ★ ここからが今回の主役：カーソル可視化制御
      ===================================================== */
+	let suppressEnsureCursor = false;
+	
 
-  function ensureCursorVisible() {
+    function ensureCursorVisible() {
+    if (suppressEnsureCursor) return; // ← ★最初に
+
     if (!window.visualViewport) return;
 
     const vv = window.visualViewport;
     const cursor = editor.getCursor();
+    const coords = editor.cursorCoords(cursor, "window");
 
-    // カーソルの画面上座標
-    const cursorCoords = editor.cursorCoords(cursor, "window");
+    const visibleTop = vv.offsetTop + 16;
+    const visibleBottom = vv.offsetTop + vv.height - 24;
 
-    // キーボード上端（≒ 表示可能エリア下端）
-    const visibleBottom = vv.offsetTop + vv.height;
-
-    // 余白（カーソルがキーボードに近づきすぎないように）
-    const margin = 24;
-
-    if (cursorCoords.bottom > visibleBottom - margin) {
-      const scrollAmount =
-        cursorCoords.bottom - (visibleBottom - margin);
-
-      editor.scrollTo(
-        null,
-        editor.getScrollInfo().top + scrollAmount
-      );
+    // 下に隠れたときだけ
+    if (coords.bottom > visibleBottom) {
+      const delta = coords.bottom - visibleBottom;
+      editor.scrollTo(null, editor.getScrollInfo().top + delta);
     }
   }
 
   /* ===== 発火タイミング ===== */
+
+  // ★ タップ直後は自動補正を止める（ジャンプ防止）
+  editor.on("mousedown", () => {
+    suppressEnsureCursor = true;
+    setTimeout(() => {
+      suppressEnsureCursor = false;
+    }, 200);
+  });
 
   // 入力・改行・カーソル移動すべてに対応
   editor.on("cursorActivity", () => {
