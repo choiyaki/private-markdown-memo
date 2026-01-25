@@ -23,20 +23,27 @@ html, body {
 		overflow: hidden;
 }
 
-/* 追加: ヘッダーコンテナのスタイル */
+
 #header-container {
     flex-shrink: 0;
     background: #ffffff;
     padding: 8px 12px;
-    /* セーフエリアの余白をここへ移動 */
     padding-top: calc(8px + env(safe-area-inset-top));
     display: flex;
     align-items: center;
+    justify-content: space-between; /* 両端と中央に配置 */
+    border-bottom: 1px solid #d1d1d6;
 }
 
-/* 追加: テキストフィールドのスタイル */
+.header-side {
+    width: 44px; /* 右側のボタンの幅に合わせる */
+    display: flex;
+    justify-content: flex-end;
+}
+
 #title-field {
-    width: 100%;
+    flex-grow: 1; /* 余白を埋める */
+    max-width: 200px; /* 広がりすぎないよう制限 */
     height: 30px;
     padding: 0 6px;
     font-size: 16px;
@@ -45,9 +52,20 @@ html, body {
     border-radius: 5px;
     outline: none;
     color: #1c1c1e;
-		font-weight: 700;
-		text-align: center;
+    font-weight: 700;
+    text-align: center;
 }
+
+#export-all-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    padding: 4px;
+    color: #007aff;
+    cursor: pointer;
+}
+
+
 
 /* 2. ツールバー（ライトテーマ用） */
 #toolbar {
@@ -181,9 +199,14 @@ html, body {
 
 </head>
 <body>
+		
 		<div id="header-container">
-        <input type="text" id="title-field" placeholder="日付">
+    <div class="header-side"></div> <input type="text" id="title-field" placeholder="日付">
+    <div class="header-side">
+        <button id="export-all-btn">📤</button>
     </div>
+</div>
+
 
     <div id="editor-container">
         <textarea id="editor"></textarea>

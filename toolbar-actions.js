@@ -210,6 +210,44 @@ export function setupToolbar(editor) {
             }
         });
     }
+		
+
+const exportBtn = document.getElementById('export-all-btn');
+if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+        const titleValue = document.getElementById('title-field').value || "無題";
+        const fullText = editor.getValue();
+        
+        // 1. 全文を「空行」で分割してブロックごとの配列にする
+        // ※見出し（#）でも区切りたい場合は、正規表現で調整します
+        const blocks = fullText.split(/\n\s*\n/);
+
+        // 2. 📝 または 📓 を含むブロックを除外する
+        const filteredBlocks = blocks.filter(block => {
+            const trimmedBlock = block.trim();
+            // ブロックの先頭、あるいは行の途中に記号があるかチェック
+            // (startsWithだけでなく、includesを使う方が確実です)
+            return !trimmedBlock.includes("📝") && !trimmedBlock.includes("📓");
+        });
+
+        // 3. 残ったブロックを空行で繋ぎ直す
+        const cleanedBody = filteredBlocks.join("\n\n").trim();
+
+        if (!cleanedBody) {
+            alert("エクスポート可能な未送信ブロックがありません。");
+            return;
+        }
+				
+				const Body = encodeURIComponent(titleValue + "\n" + cleanedBody);
+        const url = `shortcuts://run-shortcut?name=Choiyakiをmd保存&input=${Body}`;
+
+
+        // 5. 実行
+        window.location.href = url;
+    });
+}
+
+
 
 		
 }
