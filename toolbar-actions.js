@@ -111,12 +111,6 @@ export function setupToolbar(editor) {
                 if (i === lastLine) endLine = lastLine;
             }
 
-            // 3. ブロックの先頭に「📝」を挿入
-            const firstLineText = editor.getLine(startLine);
-            if (!firstLineText.startsWith("📝")) {
-                editor.replaceRange("📝", { line: startLine, ch: 0 });
-            }
-
             // 4. テキスト取得と成形
             let blockTexts = [];
             for (let i = startLine; i <= endLine; i++) {
@@ -124,6 +118,12 @@ export function setupToolbar(editor) {
             }
             // リストの「- 」を削除して整形
             const blockText = blockTexts.join("\n").replace(/\- /g, " ");
+						
+						// 3. ブロックの先頭に「📝」を挿入
+            const firstLineText = editor.getLine(startLine);
+            if (!firstLineText.startsWith("📝")) {
+                editor.replaceRange("📝", { line: startLine, ch: 0 });
+            }
 
             // 5. URL組み立てと遷移
             const datePart = titleField ? titleField.value : "";
