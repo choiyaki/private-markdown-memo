@@ -178,13 +178,32 @@
     opacity: 1 !important;
     letter-spacing: normal !important;
 }
+
+#menu-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 4px;
+  cursor: pointer;
+}
+
+#menu-panel {
+  position: fixed;
+  top: 50px;
+  left: 8px;
+  background: white;
+  border: 1px solid #d1d1d6;
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 2000;
+}
   </style>
 </head>
 
 <body>
 
   <div id="header-container">
-    <div class="header-side"></div>
+    <div class="header-side"><button id="menu-btn">☰</button></div>
     <input type="text" id="title-field" placeholder="日付">
     <div class="header-side">
       <button id="export-all-btn">📤</button>
@@ -207,6 +226,12 @@
   <div id="editor-container">
     <textarea id="editor"></textarea>
   </div>
+	
+	<div id="menu-panel" hidden>
+  <button id="login-btn">Login</button>
+  <button id="logout-btn" hidden>Logout</button>
+  <div id="user-info"></div>
+</div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>

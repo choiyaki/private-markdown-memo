@@ -1,6 +1,20 @@
 import { memoDocRef, setDoc, onSnapshot } from './firebase.js';
 import { initEditor } from './editor-config.js';
 import { setupToolbar } from './toolbar-actions.js';
+import {
+  auth,
+  provider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "./firebase.js";
+
+
+const menuBtn = document.getElementById("menu-btn");
+const menuPanel = document.getElementById("menu-panel");
+const loginBtn = document.getElementById("login-btn");
+const logoutBtn = document.getElementById("logout-btn");
+const userInfo = document.getElementById("user-info");
 
 // 1. 初期化
 const editor = initEditor();
@@ -8,6 +22,36 @@ setupToolbar(editor);
 
 // 1. タイトル要素の取得
 const titleField = document.getElementById('title-field');
+
+menuBtn.addEventListener("click", () => {
+  menuPanel.hidden = !menuPanel.hidden;
+});
+
+loginBtn.addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, provider);
+    menuPanel.hidden = true;
+  } catch (e) {
+    console.error(e);
+  }
+});
+
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  menuPanel.hidden = true;
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginBtn.hidden = true;
+    logoutBtn.hidden = false;
+    userInfo.textContent = user.displayName;
+  } else {
+    loginBtn.hidden = false;
+    logoutBtn.hidden = true;
+    userInfo.textContent = "";
+  }
+});
 
 // 2. ページ読み込み時に保存された内容を復元
 window.addEventListener('DOMContentLoaded', () => {

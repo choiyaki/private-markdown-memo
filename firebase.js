@@ -1,6 +1,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+
 
 // Firebaseコンソールの「プロジェクト設定」からコピーした内容に置き換えてください
 const firebaseConfig = {
@@ -19,4 +28,17 @@ const db = getFirestore(app);
 // Firestoreの特定のドキュメント（memosコレクションのmainドキュメント）を参照
 const memoDocRef = doc(db, "memos", "main");
 
-export { db, memoDocRef, setDoc, onSnapshot };
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+export {
+  db,
+  memoDocRef,
+  setDoc,
+  onSnapshot,
+  auth,
+  provider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+};
