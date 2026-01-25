@@ -70,7 +70,6 @@ if (window.visualViewport) {
 }
 
 
-
 // フォーカス時にも強制リセット
 editor.on("focus", () => {
     setTimeout(lockViewport, 100);

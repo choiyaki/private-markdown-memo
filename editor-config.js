@@ -52,6 +52,5 @@ editor.on("blur", () => {
     document.body.classList.remove("keyboard-open");
 });
 
-
     return editor;
 }
