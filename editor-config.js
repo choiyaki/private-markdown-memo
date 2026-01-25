@@ -121,6 +121,27 @@ export function initEditor() {
   editor.on("focus", () => {
     setTimeout(ensureCursorVisible, 50);
   });
+	
+	let lastScrollTop = 0;
+
+editor.on("mousedown", () => {
+  lastScrollTop = editor.getScrollInfo().top;
+});
+	
+	function restoreScrollIfJumped() {
+  const info = editor.getScrollInfo();
+
+  // 20px以上 上に飛んだら戻す
+  if (info.top < lastScrollTop - 20) {
+    editor.scrollTo(null, lastScrollTop);
+  }
+}
+	
+	editor.on("focus", () => {
+  setTimeout(restoreScrollIfJumped, 0);
+  setTimeout(restoreScrollIfJumped, 50);
+  setTimeout(restoreScrollIfJumped, 150);
+});
 
   return editor;
 }
