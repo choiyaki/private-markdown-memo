@@ -5,8 +5,9 @@ import {
     toggleCheckbox,
 } from "./toolbar-actions.js";
 
-export function initEditor() {
+export function initEditor(initialContent = "") {
   const textarea = document.getElementById("editor");
+	textarea.value = initialContent;
 
   const editor = CodeMirror.fromTextArea(textarea, {
     lineNumbers: false,
@@ -163,6 +164,10 @@ editor.on("mousedown", () => {
   setTimeout(restoreScrollIfJumped, 0);
   setTimeout(restoreScrollIfJumped, 50);
   setTimeout(restoreScrollIfJumped, 150);
+});
+
+editor.on("change", () => {
+  localStorage.setItem("memo_content", editor.getValue());
 });
 
 

@@ -11,7 +11,6 @@ import {
 
 import { getUserMemoRef } from "./firebase.js";
 
-
 // app.js の最上部（import直後）
 const cachedContent = localStorage.getItem("memo_content") || "";
 const cachedTitle = localStorage.getItem("memo_title") || "";
