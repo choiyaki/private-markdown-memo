@@ -24,7 +24,7 @@
 
     /* ===== ヘッダー ===== */
     #header-container {
-      position: fixed;
+      position: absolute;
       top: env(safe-area-inset-top);
       left: 0;
       right: 0;
@@ -197,11 +197,32 @@
   padding: 8px;
   z-index: 2000;
 }
+
+/* ===== 全体フレーム ===== */
+#app-frame {
+  position: relative;
+  height: 100%;
+}
+
+/* ===== PC幅対応 ===== */
+@media (min-width: 768px) {
+  #app-frame {
+    max-width: 900px;        /* ← 好みで 800〜1100 */
+    margin: 0 auto;
+    box-shadow: 0 0 0 1px #e5e5ea;
+    background: #fff;
+  }
+
+  body {
+    background: #e5e5ea;
+  }
+}
+
   </style>
 </head>
 
 <body>
-
+	<div id="app-frame">
   <div id="header-container">
     <div class="header-side"><button id="menu-btn">☰</button></div>
     <input type="text" id="title-field" placeholder="日付">
@@ -232,7 +253,7 @@
   <button id="logout-btn" hidden>Logout</button>
   <div id="user-info"></div>
 </div>
-
+</div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
 
