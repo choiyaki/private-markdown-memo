@@ -25,20 +25,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Firestoreの特定のドキュメント（memosコレクションのmainドキュメント）を参照
-const memoDocRef = doc(db, "memos", "main");
-
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+function getUserMemoRef(uid) {
+  return doc(db, "memos", uid);
+}
+
 export {
   db,
-  memoDocRef,
   setDoc,
   onSnapshot,
   auth,
   provider,
   signInWithPopup,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  getUserMemoRef
 };
