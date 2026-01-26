@@ -51,19 +51,24 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// 3. 入力されるたびに保存（同期）
-titleField.addEventListener('input', () => {
-    const currentTitle = titleField.value;
-    localStorage.setItem('memo_title', currentTitle);
-    
-    // 必要であれば、ここでページタイトル(ブラウザのタブ名)も更新
-    document.title = currentTitle || "Debug Memo";
+
+titleField.addEventListener("input", () => {
+  const currentTitle = titleField.value;
+  localStorage.setItem("memo_title", currentTitle);
+  document.title = currentTitle || "Debug Memo";
+
+  // ★ Firebaseにも保存（ログイン時のみ）
+  if (memoDocRef) {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveToFirebase, 800);
+  }
 });
 
 
 // 4. Firebase関連（以前のまま）
 let unsubscribeSnapshot = null;
 let memoDocRef = null;
+let lastSyncedTitle = "";
 let lastSyncedContent = "";
 let isInternalChange = false;
 let saveTimeout = null;
@@ -71,12 +76,26 @@ let saveTimeout = null;
 const saveToFirebase = () => {
   if (!memoDocRef) return;
 
-  const current = editor.getValue();
-  if (current === lastSyncedContent) return;
+  const currentContent = editor.getValue();
+  const currentTitle = titleField.value;
 
-  setDoc(memoDocRef, { content: current }, { merge: true })
+  // 両方同じなら何もしない
+  if (
+    currentContent === lastSyncedContent &&
+    currentTitle === lastSyncedTitle
+  ) return;
+
+  setDoc(
+    memoDocRef,
+    {
+      content: currentContent,
+      title: currentTitle
+    },
+    { merge: true }
+  )
     .then(() => {
-      lastSyncedContent = current;
+      lastSyncedContent = currentContent;
+      lastSyncedTitle = currentTitle;
     })
     .catch(console.error);
 };
@@ -92,21 +111,27 @@ function startFirestoreSync(docRef) {
   memoDocRef = docRef;
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
-    if (!doc.exists()) return;
+  if (!doc.exists()) return;
 
-    const remote = doc.data().content || "";
-    if (remote === editor.getValue()) {
-      lastSyncedContent = remote;
-      return;
-    }
+  const data = doc.data();
+  const remoteContent = data.content || "";
+  const remoteTitle = data.title || "";
 
-    if (!editor.hasFocus()) {
-      isInternalChange = true;
-      editor.setValue(remote);
-      lastSyncedContent = remote;
-      isInternalChange = false;
-    }
-  });
+  // 本文
+  if (remoteContent !== editor.getValue() && !editor.hasFocus()) {
+    isInternalChange = true;
+    editor.setValue(remoteContent);
+    isInternalChange = false;
+  }
+  lastSyncedContent = remoteContent;
+
+  // ★ タイトル（input）
+  if (remoteTitle !== titleField.value) {
+    titleField.value = remoteTitle;
+    document.title = remoteTitle || "Debug Memo";
+  }
+  lastSyncedTitle = remoteTitle;
+});
 }
 
 function stopFirestoreSync() {
