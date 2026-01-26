@@ -125,12 +125,9 @@ function startFirestoreSync(docRef) {
   }
   lastSyncedContent = remoteContent;
 
-  // ★ タイトル（input）
-  if (remoteTitle !== titleField.value) {
-    titleField.value = remoteTitle;
-    document.title = remoteTitle || "Debug Memo";
-  }
-  lastSyncedTitle = remoteTitle;
+ titleField.value = remoteTitle;
+ document.title = remoteTitle || "Debug Memo";
+ lastSyncedTitle = remoteTitle;
 });
 }
 
@@ -141,6 +138,7 @@ function stopFirestoreSync() {
   }
   memoDocRef = null;
   lastSyncedContent = "";
+  lastSyncedTitle = ""; // ← これもリセット
 }
 
 onAuthStateChanged(auth, (user) => {
