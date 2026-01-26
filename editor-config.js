@@ -1,3 +1,10 @@
+// editor-config.js
+import {
+    moveLineUp,
+    moveLineDown,
+    toggleCheckbox,
+} from "./toolbar-actions.js";
+
 export function initEditor() {
   const textarea = document.getElementById("editor");
 
@@ -39,7 +46,18 @@ export function initEditor() {
         } else {
           cm.execCommand("newlineAndIndent");
         }
-      }
+      },
+
+		
+    "Tab": "indentMore",
+    "Shift-Tab": "indentLess",
+
+    "Alt-Up": (cm) => moveLineUp(cm),
+    "Alt-Down": (cm) => moveLineDown(cm),
+
+    "Cmd-Enter": (cm) => toggleCheckbox(cm)
+		
+
     }
   });
 
@@ -146,6 +164,7 @@ editor.on("mousedown", () => {
   setTimeout(restoreScrollIfJumped, 50);
   setTimeout(restoreScrollIfJumped, 150);
 });
+
 
   return editor;
 }

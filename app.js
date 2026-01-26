@@ -12,6 +12,10 @@ import {
 import { getUserMemoRef } from "./firebase.js";
 
 
+// app.js の最上部（import直後）
+const cachedContent = localStorage.getItem("memo_content") || "";
+const cachedTitle = localStorage.getItem("memo_title") || "";
+
 const menuBtn = document.getElementById("menu-btn");
 const menuPanel = document.getElementById("menu-panel");
 const loginBtn = document.getElementById("login-btn");
@@ -19,7 +23,8 @@ const logoutBtn = document.getElementById("logout-btn");
 const userInfo = document.getElementById("user-info");
 
 // 1. 初期化
-const editor = initEditor();
+//const editor = initEditor();
+const editor = initEditor(cachedContent);
 setupToolbar(editor);
 
 // 1. タイトル要素の取得
