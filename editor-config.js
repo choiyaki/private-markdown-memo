@@ -56,7 +56,9 @@ export function initEditor(initialContent = "") {
     "Alt-Up": (cm) => moveLineUp(cm),
     "Alt-Down": (cm) => moveLineDown(cm),
 
-    "Cmd-Enter": (cm) => toggleCheckbox(cm)
+    "Cmd-Enter": (cm) => toggleCheckbox(cm),
+		"Ctrl-Enter": (cm) => toggleCheckbox(cm)
+		
 		
 
     }
