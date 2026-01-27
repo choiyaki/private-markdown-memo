@@ -26,36 +26,6 @@ const userInfo = document.getElementById("user-info");
 const editor = initEditor(cachedContent);
 setupToolbar(editor);
 
-// 追記判定
-function isAppendOnly(local, remote) {
-  return remote.startsWith(local);
-}
-
-// 追記マージ
-function mergeAppend(local, remote) {
-  const appended = remote.slice(local.length);
-
-  editor.replaceRange(
-    appended,
-    editor.posFromIndex(local.length)
-  );
-
-  lastSyncedContent = remote;
-}
-
-// 競合処理
-function showConflict(remote) {
-  console.warn("⚠️ 競合発生");
-
-  // 非破壊：下に積む
-  editor.replaceRange(
-    "\n\n---\n[PCで更新された内容]\n" + remote,
-    editor.getCursor()
-  );
-}
-
-
-
 // 1. タイトル要素の取得
 const titleField = document.getElementById('title-field');
 
@@ -106,11 +76,6 @@ let lastSyncedTitle = "";
 let lastSyncedContent = "";
 let isInternalChange = false;
 let saveTimeout = null;
-let hasLocalEditAfterLaunch = false;
-
-editor.on("change", () => {
-  hasLocalEditAfterLaunch = true;
-});
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -150,37 +115,24 @@ function startFirestoreSync(docRef) {
   memoDocRef = docRef;
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
-    if (!doc.exists()) return;
+  if (!doc.exists()) return;
 
-    const remote = doc.data().content || "";
-    const local = editor.getValue();
+  const data = doc.data();
+  const remoteContent = data.content || "";
+  const remoteTitle = data.title || "";
 
-    // ① 初回 or ローカル未編集 → そのまま反映
-    if (!hasLocalEditAfterLaunch) {
-      isInternalChange = true;
-      editor.setValue(remote);
-      isInternalChange = false;
+  // 本文
+  if (remoteContent !== editor.getValue() && !editor.hasFocus()) {
+    isInternalChange = true;
+    editor.setValue(remoteContent);
+    isInternalChange = false;
+  }
+  lastSyncedContent = remoteContent;
 
-      lastSyncedContent = remote;
-      return;
-    }
-
-    // ② 追記なら自動マージ
-    if (isAppendOnly(local, remote)) {
-      const appended = remote.slice(local.length);
-
-      editor.replaceRange(
-        appended,
-        editor.posFromIndex(local.length)
-      );
-
-      lastSyncedContent = remote;
-      return;
-    }
-
-    // ③ それ以外は競合
-    showConflict(remote);
-  });
+ titleField.value = remoteTitle;
+ document.title = remoteTitle || "Debug Memo";
+ lastSyncedTitle = remoteTitle;
+});
 }
 
 function stopFirestoreSync() {
