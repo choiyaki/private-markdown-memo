@@ -218,6 +218,34 @@
   }
 }
 
+.title-wrapper {
+  position: relative;
+}
+
+.title-spinner {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border: 2px solid #ccc;
+  border-top-color: #666;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  pointer-events: none;
+}
+
+.title-spinner.hidden {
+  display: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
   </style>
 </head>
 
@@ -225,7 +253,11 @@
 	<div id="app-frame">
   <div id="header-container">
     <div class="header-side"><button id="menu-btn">☰</button></div>
-    <input type="text" id="title-field" placeholder="日付">
+		<div class="title-wrapper">
+  <input id="title-field" type="text" placeholder="日付" />
+  <div id="title-spinner" class="title-spinner hidden"></div>
+</div>
+    
     <div class="header-side">
       <button id="export-all-btn">📤</button>
     </div>

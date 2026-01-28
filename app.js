@@ -29,6 +29,16 @@ setupToolbar(editor);
 // 1. タイトル要素の取得
 const titleField = document.getElementById('title-field');
 
+const titleSpinner = document.getElementById("title-spinner");
+
+function showTitleSpinner() {
+  titleSpinner?.classList.remove("hidden");
+}
+
+function hideTitleSpinner() {
+  titleSpinner?.classList.add("hidden");
+}
+
 menuBtn.addEventListener("click", () => {
   menuPanel.hidden = !menuPanel.hidden;
 });
@@ -110,29 +120,53 @@ editor.on("change", (cm, changeObj) => {
     saveTimeout = setTimeout(saveToFirebase, 800);
 });
 
+let firstSnapshot = true;
+
 function startFirestoreSync(docRef) {
   stopFirestoreSync();
   memoDocRef = docRef;
+  firstSnapshot = true; // ★ 毎回リセット重要
+
+  showTitleSpinner();   // ★ 同期開始で表示
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
-  if (!doc.exists()) return;
+    if (!doc.exists()) return;
 
-  const data = doc.data();
-  const remoteContent = data.content || "";
-  const remoteTitle = data.title || "";
+    const data = doc.data();
+    const remoteTitle = data.title || "";
+    const remoteContent = data.content || "";
 
-  // 本文
-  if (remoteContent !== editor.getValue() && !editor.hasFocus()) {
-    isInternalChange = true;
-    editor.setValue(remoteContent);
-    isInternalChange = false;
-  }
-  lastSyncedContent = remoteContent;
+    // ★ 初回スナップショットだけ特別扱い
+    if (firstSnapshot) {
+      // タイトル
+      titleField.value = remoteTitle;
+      document.title = remoteTitle || "Debug Memo";
 
- titleField.value = remoteTitle;
- document.title = remoteTitle || "Debug Memo";
- lastSyncedTitle = remoteTitle;
-});
+      // 本文
+      editor.setValue(remoteContent);
+
+      hideTitleSpinner();   // ★ ここで消す
+      firstSnapshot = false;
+      return;
+    }
+
+    // ===== 2回目以降（今まで通り） =====
+
+    // 本文
+    if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
+      isInternalChange = true;
+      editor.setValue(remoteContent);
+      isInternalChange = false;
+    }
+    lastSyncedContent = remoteContent;
+
+    // タイトル
+    if (remoteTitle !== titleField.value) {
+      titleField.value = remoteTitle;
+      document.title = remoteTitle || "Debug Memo";
+    }
+    lastSyncedTitle = remoteTitle;
+  });
 }
 
 function stopFirestoreSync() {
@@ -147,6 +181,8 @@ function stopFirestoreSync() {
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
+		showTitleSpinner();
+		
     loginBtn.hidden = true;
     logoutBtn.hidden = false;
     userInfo.textContent = user.displayName;
