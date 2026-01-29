@@ -110,6 +110,8 @@ let lastSyncedContent = "";
 let isInternalChange = false;
 let saveTimeout = null;
 
+let resumeTimeout = null;
+
 const saveToFirebase = () => {
   if (!memoDocRef) return;
 
@@ -158,6 +160,13 @@ function startFirestoreSync(docRef) {
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
     if (!doc.exists()) return;
+		
+		if (resumeTimeout) {
+    clearTimeout(resumeTimeout);
+    resumeTimeout = null;
+ 		}
+
+
 		
 		setSyncState("online");
 
@@ -238,4 +247,26 @@ window.addEventListener("online", () => {
   if (memoDocRef) {
     setSyncState("syncing");
   }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  if (!memoDocRef) return;
+
+  console.log("App resumed");
+
+  // 1. 見た目は一旦同期中
+  setSyncState("syncing");
+
+  // 2. snapshot を張り直す
+  startFirestoreSync(memoDocRef);
+
+  // 3. 一定時間来なければオフライン扱い
+  if (resumeTimeout) clearTimeout(resumeTimeout);
+  resumeTimeout = setTimeout(() => {
+    if (syncState === "syncing") {
+      console.warn("Snapshot timeout → offline");
+      setSyncState("offline");
+    }
+  }, 5000); // 5秒（好みで調整）
 });
