@@ -155,8 +155,6 @@ editor.on("change", (cm, changeObj) => {
 
 let firstSnapshot = true;
 
-let firstSnapshot = true;
-
 function startFirestoreSync(docRef) {
   stopFirestoreSync();
 
@@ -204,7 +202,6 @@ function startFirestoreSync(docRef) {
       // ★ オフライン中の「末尾追記」を検出
       if (!isOnline && localContent.startsWith(baseText)) {
         const diff = localContent.slice(baseText.length);
-				alert("diff="+diff);
 
         const merged = remoteContent + diff;
 
@@ -214,7 +211,6 @@ function startFirestoreSync(docRef) {
 
         // ★ 新しい基準点を確定
         baseText = remoteContent;
-				alert("base="+baseText);
         lastSyncedContent = remoteContent;
         lastSyncedTitle = remoteTitle;
 
