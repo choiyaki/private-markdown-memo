@@ -112,6 +112,10 @@ let saveTimeout = null;
 
 let resumeTimeout = null;
 
+let baseText = "";        // ★ Firestore基準テキスト
+let offlineDraft = "";   // ★ オフライン中の全文（任意・デバッグ用）
+let firstSnapshot = true;
+
 const saveToFirebase = () => {
   if (!memoDocRef) return;
 	if (!navigator.onLine) return;
@@ -145,14 +149,19 @@ const saveToFirebase = () => {
 };
 
 editor.on("change", (cm, changeObj) => {
-    if (isInternalChange || changeObj.origin === "setValue") return;
-		if (!navigator.onLine) return;
-		
-    if (saveTimeout) clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(saveToFirebase, 800);
+  if (isInternalChange || changeObj.origin === "setValue") return;
+
+  // ★ オフライン中：Firestoreには触らない
+  if (!navigator.onLine) {
+    offlineDraft = editor.getValue(); // 任意（確認用）
+    return;
+  }
+
+  // ★ オンライン中のみ保存予約
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveToFirebase, 800);
 });
 
-let firstSnapshot = true;
 
 function startFirestoreSync(docRef) {
   stopFirestoreSync();
@@ -169,21 +178,43 @@ function startFirestoreSync(docRef) {
     const remoteContent = data.content || "";
 
     if (firstSnapshot) {
-      isInternalChange = true;
-      editor.setValue(remoteContent);
-      isInternalChange = false;
+  const localContent = editor.getValue();
 
-      titleField.value = remoteTitle;
-      document.title = remoteTitle || "Debug Memo";
+  let mergedContent = remoteContent;
 
-      lastSyncedContent = remoteContent;
-      lastSyncedTitle = remoteTitle;
+  // ★ オフラインで末尾追記されていた場合だけマージ
+  if (
+    !navigator.onLine &&
+    localContent.startsWith(baseText)
+  ) {
+    const diff = localContent.slice(baseText.length);
+    mergedContent = remoteContent + diff;
+  }
 
-      firstSnapshot = false;
-      hideTitleSpinner();
-      setSyncState("online"); // ★ ここだけ
-      return;
-    }
+  isInternalChange = true;
+  editor.setValue(mergedContent);
+  isInternalChange = false;
+
+  titleField.value = remoteTitle;
+  document.title = remoteTitle || "Debug Memo";
+
+  // ★ ここで baseText を確定
+  baseText = remoteContent;
+
+  lastSyncedContent = mergedContent;
+  lastSyncedTitle = remoteTitle;
+
+  // ★ マージ結果を Firestore に反映（オンライン時のみ）
+  if (navigator.onLine && mergedContent !== remoteContent) {
+    setSyncState("syncing");
+    saveTimeout = setTimeout(saveToFirebase, 300);
+  }
+
+  firstSnapshot = false;
+  hideTitleSpinner();
+  setSyncState("online");
+  return;
+}
 
     // 2回目以降：状態は触らない
     if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
