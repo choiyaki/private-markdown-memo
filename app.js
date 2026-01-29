@@ -144,7 +144,6 @@ const saveToFirebase = () => {
 
       // ★ ここが baseText の更新タイミング
       baseText = currentContent;
-			alert(baseText);
 
       setSyncState("online");
     })
@@ -200,7 +199,6 @@ function startFirestoreSync(docRef) {
 
         // ★ 新しい同期基準を確定
         baseText = remoteContent;
-				alert(baseText);
         lastSyncedContent = remoteContent;
         lastSyncedTitle = remoteTitle;
 
@@ -278,15 +276,19 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+window.addEventListener("online", () => {
+  isOnline = true;
+  setSyncState("syncing");
+
+  // Firestoreを読み直す
+  if (memoDocRef) {
+    startFirestoreSync(memoDocRef);
+  }
+});
+
 window.addEventListener("offline", () => {
   isOnline = false;
   setSyncState("offline");
-});
-
-window.addEventListener("online", () => {
-  if (memoDocRef) {
-    setSyncState("syncing");
-  }
 });
 
 document.addEventListener("visibilitychange", () => {
