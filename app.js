@@ -144,6 +144,7 @@ const saveToFirebase = () => {
 
       // ★ ここが baseText の更新タイミング
       baseText = currentContent;
+			console.log(baseText);
 
       setSyncState("online");
     })
@@ -199,6 +200,7 @@ function startFirestoreSync(docRef) {
 
         // ★ 新しい同期基準を確定
         baseText = remoteContent;
+				console.log(baseText);
         lastSyncedContent = remoteContent;
         lastSyncedTitle = remoteTitle;
 
