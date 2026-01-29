@@ -42,6 +42,9 @@ function hideTitleSpinner() {
 let syncState = "syncing"; // 初期は必ず syncing
 renderTitleSyncState();
 
+let baseText = "";
+let isOnline = navigator.onLine;
+
 function setSyncState(state) {
   if (syncState === state) return;
   syncState = state;
@@ -123,8 +126,8 @@ const saveToFirebase = () => {
     currentContent === lastSyncedContent &&
     currentTitle === lastSyncedTitle
   ) return;
-	
-	setSyncState("syncing"); // ★ 保存開始＝同期中
+
+  setSyncState("syncing"); // ★ 保存開始＝同期中
 
   setDoc(
     memoDocRef,
@@ -135,14 +138,19 @@ const saveToFirebase = () => {
     { merge: true }
   )
     .then(() => {
+      // ★ Firestore に「確実に」保存された
       lastSyncedContent = currentContent;
       lastSyncedTitle = currentTitle;
+
+      // ★ ここが baseText の更新タイミング
+      baseText = currentContent;
+
+      setSyncState("online");
     })
     .catch(() => {
-      setSyncState("offline"); // ★ 失敗したらオフライン
+      setSyncState("offline"); // ★ 保存失敗
     });
 };
-
 editor.on("change", (cm, changeObj) => {
     if (isInternalChange || changeObj.origin === "setValue") return;
     if (saveTimeout) clearTimeout(saveTimeout);
@@ -154,59 +162,88 @@ let firstSnapshot = true;
 function startFirestoreSync(docRef) {
   stopFirestoreSync();
   memoDocRef = docRef;
-  firstSnapshot = true; // ★ 毎回リセット重要
+  firstSnapshot = true;
 
-  setSyncState("syncing"); // ★ Firestore接続中
+  setSyncState("syncing");
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
     if (!doc.exists()) return;
-		
-		if (resumeTimeout) {
-    clearTimeout(resumeTimeout);
-    resumeTimeout = null;
- 		}
 
-
-		
-		setSyncState("online");
+    if (resumeTimeout) {
+      clearTimeout(resumeTimeout);
+      resumeTimeout = null;
+    }
 
     const data = doc.data();
     const remoteTitle = data.title || "";
     const remoteContent = data.content || "";
 
-    // ★ 初回スナップショットだけ特別扱い
+    // ===== 初回 snapshot（ここがキモ） =====
     if (firstSnapshot) {
-      // タイトル
+      firstSnapshot = false;
+
+      const localContent = editor.getValue();
+
+      // タイトルは Firestore 優先
       titleField.value = remoteTitle;
       document.title = remoteTitle || "Debug Memo";
 
-      // 本文
-      editor.setValue(remoteContent);
+      // ★ オフライン編集が「末尾追記のみ」の場合
+      if (!isOnline && localContent.startsWith(baseText)) {
+        const diff = localContent.slice(baseText.length);
+        const merged = remoteContent + diff;
 
-      hideTitleSpinner();   // ★ ここで消す
-      firstSnapshot = false;
+        isInternalChange = true;
+        editor.setValue(merged);
+        isInternalChange = false;
+
+        // ★ 新しい同期基準を確定
+        baseText = remoteContent;
+        lastSyncedContent = remoteContent;
+        lastSyncedTitle = remoteTitle;
+
+        // Firestoreへ反映
+        setSyncState("syncing");
+        saveTimeout = setTimeout(saveToFirebase, 300);
+        return;
+      }
+
+      // ★ diff が危険な場合は Firestore 優先
+      isInternalChange = true;
+      editor.setValue(remoteContent);
+      isInternalChange = false;
+
+      baseText = remoteContent;
+      lastSyncedContent = remoteContent;
+      lastSyncedTitle = remoteTitle;
+
+      setSyncState("online");
+      hideTitleSpinner();
       return;
     }
 
-    // ===== 2回目以降（今まで通り） =====
+    // ===== 2回目以降（安全な同期のみ） =====
 
-    // 本文
+    // 本文（フォーカス外のみ反映）
     if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
       isInternalChange = true;
       editor.setValue(remoteContent);
       isInternalChange = false;
     }
-    lastSyncedContent = remoteContent;
 
     // タイトル
     if (remoteTitle !== titleField.value) {
       titleField.value = remoteTitle;
       document.title = remoteTitle || "Debug Memo";
     }
+
+    // ★ lastSynced だけ更新（baseTextは触らない）
+    lastSyncedContent = remoteContent;
     lastSyncedTitle = remoteTitle;
+
+    setSyncState("online");
   });
 }
-
 function stopFirestoreSync() {
   if (unsubscribeSnapshot) {
     unsubscribeSnapshot();
@@ -240,6 +277,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.addEventListener("offline", () => {
+  isOnline = false;
   setSyncState("offline");
 });
 
