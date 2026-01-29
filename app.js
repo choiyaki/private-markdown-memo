@@ -144,6 +144,7 @@ const saveToFirebase = () => {
 
       // ★ ここが baseText の更新タイミング
       baseText = currentContent;
+			alert("base="+baseText);
 
       setSyncState("online");
     })
@@ -191,6 +192,7 @@ function startFirestoreSync(docRef) {
       // ★ オフライン編集が「末尾追記のみ」の場合
       if (!isOnline && localContent.startsWith(baseText)) {
         const diff = localContent.slice(baseText.length);
+				alert("diff="+diff)
         const merged = remoteContent + diff;
 
         isInternalChange = true;
@@ -199,6 +201,7 @@ function startFirestoreSync(docRef) {
 
         // ★ 新しい同期基準を確定
         baseText = remoteContent;
+				alert("base=" + baseText);
         lastSyncedContent = remoteContent;
         lastSyncedTitle = remoteTitle;
 
