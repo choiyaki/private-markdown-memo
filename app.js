@@ -155,8 +155,11 @@ editor.on("change", (cm, changeObj) => {
 
 let firstSnapshot = true;
 
+let firstSnapshot = true;
+
 function startFirestoreSync(docRef) {
   stopFirestoreSync();
+
   memoDocRef = docRef;
   firstSnapshot = true;
 
@@ -165,16 +168,30 @@ function startFirestoreSync(docRef) {
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
     if (!doc.exists()) return;
 
-    if (resumeTimeout) {
-      clearTimeout(resumeTimeout);
-      resumeTimeout = null;
+    // ===== Firestore snapshot の「正体」を必ず最初に見る =====
+    const { fromCache, hasPendingWrites } = doc.metadata;
+
+    // 🔴 オフライン編集中（ローカルキャッシュ + 未同期）
+    if (fromCache && hasPendingWrites) {
+      setSyncState("offline");
+      return;
     }
 
+    // 🌀 同期途中（オンラインだが未確定）
+    if (hasPendingWrites) {
+      setSyncState("syncing");
+      return;
+    }
+
+    // 🟢 サーバー確定 snapshot（唯一信用できる）
+    setSyncState("online");
+
+    // ===== ここから下は「確定データのみ」 =====
     const data = doc.data();
     const remoteTitle = data.title || "";
     const remoteContent = data.content || "";
 
-    // ===== 初回 snapshot（ここがキモ） =====
+    // ===== 初回 snapshot（復帰・再接続時の要） =====
     if (firstSnapshot) {
       firstSnapshot = false;
 
@@ -184,29 +201,32 @@ function startFirestoreSync(docRef) {
       titleField.value = remoteTitle;
       document.title = remoteTitle || "Debug Memo";
 
-      // ★ オフライン編集が「末尾追記のみ」の場合
+      // ★ オフライン中の「末尾追記」を検出
       if (!isOnline && localContent.startsWith(baseText)) {
         const diff = localContent.slice(baseText.length);
-				alert("diff="+diff)
+				alert("diff="+diff);
+
         const merged = remoteContent + diff;
 
         isInternalChange = true;
         editor.setValue(merged);
         isInternalChange = false;
 
-        // ★ 新しい同期基準を確定
+        // ★ 新しい基準点を確定
         baseText = remoteContent;
-				alert("base=" + baseText);
+				alert("base="+baseText);
         lastSyncedContent = remoteContent;
         lastSyncedTitle = remoteTitle;
 
-        // Firestoreへ反映
+        // Firestoreへ反映（1回だけ）
         setSyncState("syncing");
         saveTimeout = setTimeout(saveToFirebase, 300);
+
+        hideTitleSpinner();
         return;
       }
 
-      // ★ diff が危険な場合は Firestore 優先
+      // ★ diff が信用できない場合は Firestore 優先
       isInternalChange = true;
       editor.setValue(remoteContent);
       isInternalChange = false;
@@ -215,14 +235,13 @@ function startFirestoreSync(docRef) {
       lastSyncedContent = remoteContent;
       lastSyncedTitle = remoteTitle;
 
-      setSyncState("online");
       hideTitleSpinner();
       return;
     }
 
-    // ===== 2回目以降（安全な同期のみ） =====
+    // ===== 2回目以降（通常同期） =====
 
-    // 本文（フォーカス外のみ反映）
+    // 本文：フォーカス外のみ反映
     if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
       isInternalChange = true;
       editor.setValue(remoteContent);
@@ -235,13 +254,13 @@ function startFirestoreSync(docRef) {
       document.title = remoteTitle || "Debug Memo";
     }
 
-    // ★ lastSynced だけ更新（baseTextは触らない）
+    // ★ baseText は触らない（重要）
     lastSyncedContent = remoteContent;
     lastSyncedTitle = remoteTitle;
-
-    setSyncState("online");
   });
 }
+
+
 function stopFirestoreSync() {
   if (unsubscribeSnapshot) {
     unsubscribeSnapshot();
