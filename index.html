@@ -222,21 +222,37 @@
   position: relative;
 }
 
-.title-spinner {
+/* 共通の表示位置 */
+.title-indicator {
   position: absolute;
-  right: 10px;
+  right: 8px;
   top: 50%;
+  transform: translateY(-50%);
   width: 14px;
   height: 14px;
-  margin-top: -7px;
+  pointer-events: none;
+}
+
+/* スピナー */
+.spinner {
+  width: 14px;
+  height: 14px;
   border: 2px solid #ccc;
   border-top-color: #666;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  pointer-events: none;
 }
 
-.title-spinner.hidden {
+/* 状態表示 */
+.status {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 14px;
+  text-align: center;
+}
+
+/* 表示制御 */
+.hidden {
   display: none;
 }
 
@@ -244,10 +260,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.hidden {
-  display: none;
 }
 
 #title-status {
@@ -265,8 +277,10 @@
     <div class="header-side"><button id="menu-btn">☰</button></div>
 		<div class="title-wrapper">
   <input id="title-field" type="text" placeholder="日付" />
-  <div id="title-spinner" class="title-spinner hidden"><span id="title-status" class="hidden"></span></div>
-	
+    <div id="title-indicator" class="title-indicator hidden">
+    <div id="title-spinner" class="spinner"></div>
+    <span id="title-status" class="status hidden"></span>
+  </div>
 </div>
     
     <div class="header-side">
