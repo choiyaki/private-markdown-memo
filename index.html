@@ -222,50 +222,49 @@
   position: relative;
 }
 
-/* 共通の表示位置 */
-.title-indicator {
+/* 共通：円の見た目 */
+.sync-indicator {
   position: absolute;
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
+
   width: 14px;
   height: 14px;
+  border-radius: 50%;
+  box-sizing: border-box;
+
   pointer-events: none;
 }
 
-/* スピナー */
-.spinner {
-  width: 14px;
-  height: 14px;
+/* ===== 状態別 ===== */
+
+/* 同期中：スピナー */
+.sync-indicator.syncing {
   border: 2px solid #ccc;
   border-top-color: #666;
-  border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
-/* 状態表示 */
-.status {
-  display: inline-block;
-  font-size: 12px;
-  line-height: 14px;
-  text-align: center;
+/* オンライン：緑 */
+.sync-indicator.online {
+  background: #34c759; /* iOSグリーン */
 }
 
-/* 表示制御 */
+/* オフライン：赤 */
+.sync-indicator.offline {
+  background: #ff3b30; /* iOSレッド */
+}
+
+/* 非表示 */
 .hidden {
   display: none;
 }
 
 @keyframes spin {
   to {
-    transform: rotate(360deg);
+    transform: translateY(-50%) rotate(360deg);
   }
-}
-
-#title-status {
-  margin-left: 6px;
-  font-size: 12px;
-  opacity: 0.8;
 }
 
   </style>
@@ -275,12 +274,10 @@
 	<div id="app-frame">
   <div id="header-container">
     <div class="header-side"><button id="menu-btn">☰</button></div>
-		<div class="title-wrapper">
+<div class="title-wrapper">
   <input id="title-field" type="text" placeholder="日付" />
-    <div id="title-indicator" class="title-indicator hidden">
-    <div id="title-spinner" class="spinner"></div>
-    <span id="title-status" class="status hidden"></span>
-  </div>
+
+  <div id="title-indicator" class="sync-indicator hidden"></div>
 </div>
     
     <div class="header-side">

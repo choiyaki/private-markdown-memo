@@ -30,8 +30,6 @@ setupToolbar(editor);
 const titleField = document.getElementById('title-field');
 
 const titleIndicator = document.getElementById("title-indicator");
-const titleSpinner = document.getElementById("title-spinner");
-const titleStatus = document.getElementById("title-status");
 
 function showTitleSpinner() {
   titleSpinner?.classList.remove("hidden");
@@ -52,24 +50,14 @@ function setSyncState(state) {
 function renderTitleSyncState() {
   if (!titleIndicator) return;
 
-  // 共通で表示
-  titleIndicator.classList.remove("hidden");
+  titleIndicator.classList.remove(
+    "hidden",
+    "syncing",
+    "online",
+    "offline"
+  );
 
-  if (syncState === "syncing") {
-    titleSpinner.classList.remove("hidden");
-    titleStatus.classList.add("hidden");
-    return;
-  }
-
-  // syncing 以外
-  titleSpinner.classList.add("hidden");
-  titleStatus.classList.remove("hidden");
-
-  if (syncState === "online") {
-    titleStatus.textContent = "🟢";
-  } else if (syncState === "offline") {
-    titleStatus.textContent = "🔴";
-  }
+  titleIndicator.classList.add(syncState);
 }
 
 
