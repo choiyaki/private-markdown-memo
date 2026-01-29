@@ -114,6 +114,7 @@ let resumeTimeout = null;
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
+	if (!navigator.onLine) return;
 
   const currentContent = editor.getValue();
   const currentTitle = titleField.value;
@@ -145,6 +146,8 @@ const saveToFirebase = () => {
 
 editor.on("change", (cm, changeObj) => {
     if (isInternalChange || changeObj.origin === "setValue") return;
+		if (!navigator.onLine) return;
+		
     if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(saveToFirebase, 800);
 });
@@ -154,55 +157,42 @@ let firstSnapshot = true;
 function startFirestoreSync(docRef) {
   stopFirestoreSync();
   memoDocRef = docRef;
-  firstSnapshot = true; // ★ 毎回リセット重要
+  firstSnapshot = true;
 
-  setSyncState("syncing"); // ★ Firestore接続中
+  setSyncState("syncing");
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
     if (!doc.exists()) return;
-		
-		if (resumeTimeout) {
-    clearTimeout(resumeTimeout);
-    resumeTimeout = null;
- 		}
-
-
-		
-		setSyncState("online");
 
     const data = doc.data();
     const remoteTitle = data.title || "";
     const remoteContent = data.content || "";
 
-    // ★ 初回スナップショットだけ特別扱い
     if (firstSnapshot) {
-      // タイトル
+      isInternalChange = true;
+      editor.setValue(remoteContent);
+      isInternalChange = false;
+
       titleField.value = remoteTitle;
       document.title = remoteTitle || "Debug Memo";
 
-      // 本文
-      editor.setValue(remoteContent);
+      lastSyncedContent = remoteContent;
+      lastSyncedTitle = remoteTitle;
 
-      hideTitleSpinner();   // ★ ここで消す
       firstSnapshot = false;
+      hideTitleSpinner();
+      setSyncState("online"); // ★ ここだけ
       return;
     }
 
-    // ===== 2回目以降（今まで通り） =====
-
-    // 本文
+    // 2回目以降：状態は触らない
     if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
       isInternalChange = true;
       editor.setValue(remoteContent);
       isInternalChange = false;
     }
-    lastSyncedContent = remoteContent;
 
-    // タイトル
-    if (remoteTitle !== titleField.value) {
-      titleField.value = remoteTitle;
-      document.title = remoteTitle || "Debug Memo";
-    }
+    lastSyncedContent = remoteContent;
     lastSyncedTitle = remoteTitle;
   });
 }
@@ -245,7 +235,8 @@ window.addEventListener("offline", () => {
 
 window.addEventListener("online", () => {
   if (memoDocRef) {
-    setSyncState("syncing");
+    setSyncState("syncing"); // ★ onlineにはしない
+    startFirestoreSync(memoDocRef);
   }
 });
 
