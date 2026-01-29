@@ -142,11 +142,6 @@ const saveToFirebase = () => {
       lastSyncedContent = currentContent;
       lastSyncedTitle = currentTitle;
 
-      // ★ ここが baseText の更新タイミング
-      baseText = currentContent;
-			alert("base="+baseText);
-
-      setSyncState("online");
     })
     .catch(() => {
       setSyncState("offline"); // ★ 保存失敗
