@@ -194,6 +194,14 @@ function startFirestoreSync(docRef) {
 
     lastSyncedContent = remoteContent;
     lastSyncedTitle = remoteTitle;
+		
+		if (
+  syncState === "syncing" &&
+  remoteContent === lastSyncedContent &&
+  remoteTitle === lastSyncedTitle
+) {
+  setSyncState("online");
+}
   });
 }
 
