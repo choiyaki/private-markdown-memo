@@ -183,14 +183,11 @@ function startFirestoreSync(docRef) {
   let mergedContent = remoteContent;
 
   // ★ オフラインで末尾追記されていた場合だけマージ
-  if (
-    !navigator.onLine &&
-    localContent.startsWith(baseText)
-  ) {
-    const diff = localContent.slice(baseText.length);
-		alert("d"+diff)
-    mergedContent = remoteContent + diff;
-  }
+  if (localContent.startsWith(baseText)) {
+  const diff = localContent.slice(baseText.length);
+	alert("d="+diff);
+  mergedContent = remoteContent + diff;
+}
 
   isInternalChange = true;
   editor.setValue(mergedContent);
