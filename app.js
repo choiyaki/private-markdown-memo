@@ -39,6 +39,36 @@ function hideTitleSpinner() {
   titleSpinner?.classList.add("hidden");
 }
 
+let syncState = "syncing"; // 初期は必ず syncing
+
+const titleStatus = document.getElementById("title-status");
+
+function setSyncState(state) {
+  if (syncState === state) return;
+  syncState = state;
+  renderTitleSyncState();
+}
+
+function renderTitleSyncState() {
+  if (syncState === "syncing") {
+    showTitleSpinner();
+    titleStatus?.classList.add("hidden");
+    return;
+  }
+
+  hideTitleSpinner();
+
+  if (!titleStatus) return;
+  titleStatus.classList.remove("hidden");
+
+  if (syncState === "online") {
+    titleStatus.textContent = "🟢";
+  } else if (syncState === "offline") {
+    titleStatus.textContent = "🔴";
+  }
+}
+
+
 menuBtn.addEventListener("click", () => {
   menuPanel.hidden = !menuPanel.hidden;
 });
@@ -98,6 +128,8 @@ const saveToFirebase = () => {
     currentContent === lastSyncedContent &&
     currentTitle === lastSyncedTitle
   ) return;
+	
+	setSyncState("syncing"); // ★ 保存開始＝同期中
 
   setDoc(
     memoDocRef,
@@ -111,7 +143,9 @@ const saveToFirebase = () => {
       lastSyncedContent = currentContent;
       lastSyncedTitle = currentTitle;
     })
-    .catch(console.error);
+    .catch(() => {
+      setSyncState("offline"); // ★ 失敗したらオフライン
+    });
 };
 
 editor.on("change", (cm, changeObj) => {
@@ -127,10 +161,12 @@ function startFirestoreSync(docRef) {
   memoDocRef = docRef;
   firstSnapshot = true; // ★ 毎回リセット重要
 
-  showTitleSpinner();   // ★ 同期開始で表示
+  setSyncState("syncing"); // ★ Firestore接続中
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
     if (!doc.exists()) return;
+		
+		setSyncState("online");
 
     const data = doc.data();
     const remoteTitle = data.title || "";
@@ -198,5 +234,15 @@ onAuthStateChanged(auth, (user) => {
 
     // ★ 同期停止（ローカルのみ）
     stopFirestoreSync();
+  }
+});
+
+window.addEventListener("offline", () => {
+  setSyncState("offline");
+});
+
+window.addEventListener("online", () => {
+  if (memoDocRef) {
+    setSyncState("syncing");
   }
 });
