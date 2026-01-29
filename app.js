@@ -188,6 +188,7 @@ function startFirestoreSync(docRef) {
     localContent.startsWith(baseText)
   ) {
     const diff = localContent.slice(baseText.length);
+		alert("d"+diff)
     mergedContent = remoteContent + diff;
   }
 
@@ -200,6 +201,7 @@ function startFirestoreSync(docRef) {
 
   // ★ ここで baseText を確定
   baseText = remoteContent;
+	alert("b"+baseText);
 
   lastSyncedContent = mergedContent;
   lastSyncedTitle = remoteTitle;
