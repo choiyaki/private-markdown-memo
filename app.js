@@ -215,15 +215,19 @@ function startFirestoreSync(docRef) {
   return;
 }
 
-    // 2回目以降：状態は触らない
-    if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
-      isInternalChange = true;
-      editor.setValue(remoteContent);
-      isInternalChange = false;
-    }
+    // 2回目以降
+if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
+  isInternalChange = true;
+  editor.setValue(remoteContent);
+  isInternalChange = false;
+}
 
-    lastSyncedContent = remoteContent;
-    lastSyncedTitle = remoteTitle;
+// Firestoreで確定した内容
+lastSyncedContent = remoteContent;
+lastSyncedTitle = remoteTitle;
+
+// ★ ここが重要
+baseText = remoteContent;
 		
 		if (
   syncState === "syncing" &&
