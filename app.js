@@ -32,11 +32,11 @@ const titleField = document.getElementById('title-field');
 const titleIndicator = document.getElementById("title-indicator");
 
 function showTitleSpinner() {
-  titleSpinner?.classList.remove("hidden");
+  titleIndicator?.classList.remove("hidden");
 }
 
 function hideTitleSpinner() {
-  titleSpinner?.classList.add("hidden");
+  titleIndicator?.classList.add("hidden");
 }
 
 let syncState = "syncing"; // 初期は必ず syncing

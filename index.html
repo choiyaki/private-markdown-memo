@@ -220,6 +220,7 @@
 
 .title-wrapper {
   position: relative;
+  
 }
 
 /* 共通：円の見た目 */
@@ -261,11 +262,13 @@
   display: none;
 }
 
+/* 回転は rotate のみ */
 @keyframes spin {
   to {
-    transform: translateY(-50%) rotate(360deg);
+    transform: rotate(360deg);
   }
 }
+
 
   </style>
 </head>
