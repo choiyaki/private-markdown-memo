@@ -40,6 +40,7 @@ function hideTitleSpinner() {
 }
 
 let syncState = "syncing"; // 初期は必ず syncing
+renderTitleSyncState();
 
 function setSyncState(state) {
   if (syncState === state) return;
