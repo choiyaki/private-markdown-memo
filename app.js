@@ -194,7 +194,7 @@ function startFirestoreSync(docRef) {
       // ★ baseText が信用できない場合のみ diff を計算
       if (!baseTextIsAuthoritative && baseText && localContent.startsWith(baseText)) {
         const diff = localContent.slice(baseText.length);
-				
+				alert("d="+diff);
         mergedContent = remoteContent + diff;
       }
 
@@ -210,6 +210,7 @@ function startFirestoreSync(docRef) {
       // ★ ここで「Firestore基準」を確定
       baseText = mergedContent;
 			baseTextIsAuthoritative = true;
+			alert("b="+baseText);
 
       lastSyncedContent = mergedContent;
       lastSyncedTitle = remoteTitle;
@@ -236,6 +237,7 @@ function startFirestoreSync(docRef) {
     // Firestore確定
     baseText = remoteContent;
     baseTextIsAuthoritative = true;
+		alert("b="+baseText);
 
     lastSyncedContent = remoteContent;
     lastSyncedTitle = remoteTitle;
