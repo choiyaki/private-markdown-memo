@@ -46,6 +46,12 @@ function setSyncState(state) {
   if (syncState === state) return;
   syncState = state;
   renderTitleSyncState();
+
+  if (state === "online") {
+    clearBaseTextMark();
+  } else {
+    applyBaseTextMark();
+  }
 }
 
 function renderTitleSyncState() {
@@ -116,6 +122,7 @@ let baseText = "";        // ★ Firestore基準テキスト
 let offlineDraft = "";   // ★ オフライン中の全文（任意・デバッグ用）
 let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
+let baseTextMark = null;
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -257,6 +264,30 @@ function stopFirestoreSync() {
   lastSyncedContent = "";
   lastSyncedTitle = ""; // ← これもリセット
 }
+
+
+function applyBaseTextMark() {
+  if (!baseText) return;
+  if (baseTextMark) return; // 二重防止
+
+  const from = editor.posFromIndex(0);
+  const to = editor.posFromIndex(baseText.length);
+
+  baseTextMark = editor.markText(from, to, {
+    className: "cm-base-text",
+    inclusiveLeft: false,
+    inclusiveRight: false
+  });
+}
+
+function clearBaseTextMark() {
+  if (!baseTextMark) return;
+  baseTextMark.clear();
+  baseTextMark = null;
+}
+
+
+
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
