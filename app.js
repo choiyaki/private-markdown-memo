@@ -115,6 +115,7 @@ let resumeTimeout = null;
 let baseText = "";        // ★ Firestore基準テキスト
 let offlineDraft = "";   // ★ オフライン中の全文（任意・デバッグ用）
 let firstSnapshot = true;
+let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -151,13 +152,18 @@ const saveToFirebase = () => {
 editor.on("change", (cm, changeObj) => {
   if (isInternalChange || changeObj.origin === "setValue") return;
 
-  // ★ オフライン中：Firestoreには触らない
+  // ★ ユーザーが触った瞬間、baseTextは信用しない
+  if (baseTextIsAuthoritative) {
+    baseTextIsAuthoritative = false;
+  }
+
+  // オフライン中：Firestoreには触らない
   if (!navigator.onLine) {
-    offlineDraft = editor.getValue(); // 任意（確認用）
+    offlineDraft = editor.getValue(); // 任意
     return;
   }
 
-  // ★ オンライン中のみ保存予約
+  // オンライン中のみ保存予約
   if (saveTimeout) clearTimeout(saveTimeout);
   saveTimeout = setTimeout(saveToFirebase, 800);
 });
@@ -168,6 +174,9 @@ function startFirestoreSync(docRef) {
   memoDocRef = docRef;
   firstSnapshot = true;
 
+  // ★ Firestoreとまだ一致していない
+  baseTextIsAuthoritative = false;
+
   setSyncState("syncing");
 
   unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
@@ -177,65 +186,62 @@ function startFirestoreSync(docRef) {
     const remoteTitle = data.title || "";
     const remoteContent = data.content || "";
 
+    // ===== 初回 snapshot =====
     if (firstSnapshot) {
-  const localContent = editor.getValue();
+      const localContent = editor.getValue();
+      let mergedContent = remoteContent;
 
-  let mergedContent = remoteContent;
+      // ★ baseText が信用できない場合のみ diff を計算
+      if (!baseTextIsAuthoritative && localContent.startsWith(baseText)) {
+        const diff = localContent.slice(baseText.length);
+        mergedContent = remoteContent + diff;
+      }
 
-  // ★ オフラインで末尾追記されていた場合だけマージ
-  if (localContent.startsWith(baseText)) {
-  const diff = localContent.slice(baseText.length);
-	alert("d="+diff);
-  mergedContent = remoteContent + diff;
-}
+      // editor に反映
+      isInternalChange = true;
+      editor.setValue(mergedContent);
+      isInternalChange = false;
 
-  isInternalChange = true;
-  editor.setValue(mergedContent);
-  isInternalChange = false;
+      // タイトル反映
+      titleField.value = remoteTitle;
+      document.title = remoteTitle || "Debug Memo";
 
-  titleField.value = remoteTitle;
-  document.title = remoteTitle || "Debug Memo";
+      // ★ ここで「Firestore基準」を確定
+      baseText = remoteContent;
+      baseTextIsAuthoritative = true;
 
-  // ★ ここで baseText を確定
-  baseText = remoteContent;
-	alert("b"+baseText);
+      lastSyncedContent = mergedContent;
+      lastSyncedTitle = remoteTitle;
 
-  lastSyncedContent = mergedContent;
-  lastSyncedTitle = remoteTitle;
+      // ★ diff があった場合だけ Firestore に反映
+      if (navigator.onLine && mergedContent !== remoteContent) {
+        setSyncState("syncing");
+        saveTimeout = setTimeout(saveToFirebase, 300);
+      }
 
-  // ★ マージ結果を Firestore に反映（オンライン時のみ）
-  if (navigator.onLine && mergedContent !== remoteContent) {
-    setSyncState("syncing");
-    saveTimeout = setTimeout(saveToFirebase, 300);
-  }
+      firstSnapshot = false;
+      hideTitleSpinner();
+      setSyncState("online");
+      return;
+    }
 
-  firstSnapshot = false;
-  hideTitleSpinner();
-  setSyncState("online");
-  return;
-}
+    // ===== 2回目以降 =====
+    if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
+      isInternalChange = true;
+      editor.setValue(remoteContent);
+      isInternalChange = false;
+    }
 
-    // 2回目以降
-if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
-  isInternalChange = true;
-  editor.setValue(remoteContent);
-  isInternalChange = false;
-}
+    // Firestore確定
+    baseText = remoteContent;
+    baseTextIsAuthoritative = true;
 
-// Firestoreで確定した内容
-lastSyncedContent = remoteContent;
-lastSyncedTitle = remoteTitle;
+    lastSyncedContent = remoteContent;
+    lastSyncedTitle = remoteTitle;
 
-// ★ ここが重要
-baseText = remoteContent;
-		
-		if (
-  syncState === "syncing" &&
-  remoteContent === lastSyncedContent &&
-  remoteTitle === lastSyncedTitle
-) {
-  setSyncState("online");
-}
+    if (syncState === "syncing") {
+      setSyncState("online");
+    }
   });
 }
 
