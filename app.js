@@ -138,7 +138,6 @@ const saveToFirebase = () => {
     currentTitle === lastSyncedTitle
   ) return;
 	
-	setSyncState("syncing"); // ★ 保存開始＝同期中
 
   setDoc(
     memoDocRef,
@@ -269,13 +268,14 @@ function stopFirestoreSync() {
 
 function applyBaseTextMark() {
   clearBaseTextMark();
-
   if (!baseText) return;
 
-  // === 文字単位 ===
+  const endPos = editor.posFromIndex(baseText.length);
+
+  // === 文字単位（baseText 全体）===
   baseTextMark = editor.markText(
     { line: 0, ch: 0 },
-    editor.posFromIndex(baseText.length),
+    endPos,
     {
       className: "cm-baseText",
       inclusiveLeft: false,
@@ -283,9 +283,8 @@ function applyBaseTextMark() {
     }
   );
 
-  // === 行単位 ===
-  const endPos = editor.posFromIndex(baseText.length);
-  for (let line = 0; line <= endPos.line; line++) {
+  // === 行単位（最終行「手前」まで）===
+  for (let line = 0; line < endPos.line; line++) {
     editor.addLineClass(line, "background", "cm-baseText-line");
     baseTextLineHandles.push(line);
   }
