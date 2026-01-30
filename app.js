@@ -192,8 +192,9 @@ function startFirestoreSync(docRef) {
       let mergedContent = remoteContent;
 
       // ★ baseText が信用できない場合のみ diff を計算
-      if (!baseTextIsAuthoritative && localContent.startsWith(baseText)) {
+      if (!baseTextIsAuthoritative && baseText && localContent.startsWith(baseText)) {
         const diff = localContent.slice(baseText.length);
+				
         mergedContent = remoteContent + diff;
       }
 
@@ -207,8 +208,8 @@ function startFirestoreSync(docRef) {
       document.title = remoteTitle || "Debug Memo";
 
       // ★ ここで「Firestore基準」を確定
-      baseText = remoteContent;
-      baseTextIsAuthoritative = true;
+      baseText = mergedContent;
+			baseTextIsAuthoritative = true;
 
       lastSyncedContent = mergedContent;
       lastSyncedTitle = remoteTitle;
