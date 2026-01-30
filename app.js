@@ -123,6 +123,7 @@ let offlineDraft = "";   // ★ オフライン中の全文（任意・デバッ
 let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
 let baseTextMark = null;
+let baseTextLineHandles = [];
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -267,25 +268,40 @@ function stopFirestoreSync() {
 
 
 function applyBaseTextMark() {
+  clearBaseTextMark();
+
   if (!baseText) return;
-  if (baseTextMark) return; // 二重防止
 
-  const from = editor.posFromIndex(0);
-  const to = editor.posFromIndex(baseText.length);
+  // === 文字単位 ===
+  baseTextMark = editor.markText(
+    { line: 0, ch: 0 },
+    editor.posFromIndex(baseText.length),
+    {
+      className: "cm-baseText",
+      inclusiveLeft: false,
+      inclusiveRight: false
+    }
+  );
 
-  baseTextMark = editor.markText(from, to, {
-    className: "cm-base-text",
-    inclusiveLeft: false,
-    inclusiveRight: false
-  });
+  // === 行単位 ===
+  const endPos = editor.posFromIndex(baseText.length);
+  for (let line = 0; line <= endPos.line; line++) {
+    editor.addLineClass(line, "background", "cm-baseText-line");
+    baseTextLineHandles.push(line);
+  }
 }
 
 function clearBaseTextMark() {
-  if (!baseTextMark) return;
-  baseTextMark.clear();
-  baseTextMark = null;
-}
+  if (baseTextMark) {
+    baseTextMark.clear();
+    baseTextMark = null;
+  }
 
+  for (const line of baseTextLineHandles) {
+    editor.removeLineClass(line, "background", "cm-baseText-line");
+  }
+  baseTextLineHandles = [];
+}
 
 
 
