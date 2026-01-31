@@ -128,27 +128,12 @@ let saveTimeout = null;
 let resumeTimeout = null;
 
 let baseText = cachedBaseText;   // ★ ローカル保存された基準
-let offlineDraft = "";   // ★ オフライン中の全文（任意・デバッグ用）
 let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
 let baseTextMark = null;
 let baseTextLineHandles = [];
-let isComposing = false;
 
-const inputField = editor.getInputField();
-
-inputField.addEventListener("compositionstart", () => {
-  isComposing = true;
-});
-
-inputField.addEventListener("compositionend", () => {
-  isComposing = false;
-
-  // ★ ここでだけ解除
-  if (syncState === "online") {
-    clearBaseTextMark();
-  }
-});
+let pendingRemoteContent = null;
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -184,14 +169,9 @@ const saveToFirebase = () => {
 editor.on("change", (cm, changeObj) => {
   if (isInternalChange || changeObj.origin === "setValue") return;
 
-  // ★ ユーザーが触った瞬間、baseTextは信用しない
-  if (baseTextIsAuthoritative) {
-    baseTextIsAuthoritative = false;
-  }
-
   // オフライン中：Firestoreには触らない
   if (!navigator.onLine) {
-    offlineDraft = editor.getValue(); // 任意
+    
     return;
   }
 
@@ -261,11 +241,14 @@ function startFirestoreSync(docRef) {
     }
 
     // ===== 2回目以降 =====
-    if (!editor.hasFocus() && remoteContent !== editor.getValue()) {
-      isInternalChange = true;
-      editor.setValue(remoteContent);
-      isInternalChange = false;
-    }
+if (remoteContent !== editor.getValue()) {
+  if (isComposing) {
+    // ★ 今は触らない。保留。
+    pendingRemoteContent = remoteContent;
+  } else if (!editor.hasFocus()) {
+    applyRemote(remoteContent);
+  }
+}
 
     // Firestore確定
     baseText = remoteContent;
@@ -328,7 +311,28 @@ function clearBaseTextMark() {
   baseTextLineHandles = [];
 }
 
+function applyRemote(content) {
+  isInternalChange = true;
+  editor.setValue(content);
+  isInternalChange = false;
 
+  baseText = content;
+  baseTextIsAuthoritative = true;
+  localStorage.setItem("memo_baseText", baseText);
+
+  lastSyncedContent = content;
+}
+
+function applyPendingRemote() {
+  if (pendingRemoteContent == null) return;
+
+  applyRemote(pendingRemoteContent);
+  pendingRemoteContent = null;
+
+  if (syncState === "syncing") {
+    setSyncState("online");
+  }
+}
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
