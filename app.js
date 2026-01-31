@@ -94,7 +94,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (savedTitle) {
         titleField.value = savedTitle;
     }
-		setSyncState(syncState);
+		// ★ 起動時専用：状態遷移は起こさない
+  if (syncState !== "online") {
+    applyBaseTextMark();
+  }
+
+  renderTitleSyncState();
 });
 
 
