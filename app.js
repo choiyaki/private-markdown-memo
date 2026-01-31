@@ -49,15 +49,12 @@ function setSyncState(state) {
   syncState = state;
   renderTitleSyncState();
 
-  if (state === "online") {
-    // ★ IME未確定中は絶対に解除しない
-    if (!isComposing) {
-      clearBaseTextMark();
-    }
-    // composing中なら、compositionend で解除される
-  } else {
-    applyBaseTextMark();
-  }
+  // ✅ 一旦ここまで戻す
+	if (state === "online") {
+	  clearBaseTextMark();
+	} else {
+	  applyBaseTextMark();
+	}
 }
 
 function renderTitleSyncState() {
@@ -138,6 +135,21 @@ let baseTextMark = null;
 let baseTextLineHandles = [];
 let isComposing = false;
 
+const inputField = editor.getInputField();
+
+inputField.addEventListener("compositionstart", () => {
+  isComposing = true;
+});
+
+inputField.addEventListener("compositionend", () => {
+  isComposing = false;
+
+  // ★ ここでだけ解除
+  if (syncState === "online") {
+    clearBaseTextMark();
+  }
+});
+
 const saveToFirebase = () => {
   if (!memoDocRef) return;
 	if (!navigator.onLine) return;
@@ -186,19 +198,6 @@ editor.on("change", (cm, changeObj) => {
   // オンライン中のみ保存予約
   if (saveTimeout) clearTimeout(saveTimeout);
   saveTimeout = setTimeout(saveToFirebase, 800);
-});
-
-editor.on("compositionstart", () => {
-  isComposing = true;
-});
-
-editor.on("compositionend", () => {
-  isComposing = false;
-
-  // ★ IME確定後に pending な解除があれば実行
-  if (syncState === "online") {
-    clearBaseTextMark();
-  }
 });
 
 
