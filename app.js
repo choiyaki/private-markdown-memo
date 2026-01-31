@@ -133,8 +133,6 @@ let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致してい
 let baseTextMark = null;
 let baseTextLineHandles = [];
 
-let pendingRemoteContent = null;
-
 const saveToFirebase = () => {
   if (!memoDocRef) return;
 	if (!navigator.onLine) return;
@@ -242,10 +240,7 @@ function startFirestoreSync(docRef) {
 
     // ===== 2回目以降 =====
 if (remoteContent !== editor.getValue()) {
-  if (isComposing) {
-    // ★ 今は触らない。保留。
-    pendingRemoteContent = remoteContent;
-  } else if (!editor.hasFocus()) {
+  if (!editor.hasFocus()) {
     applyRemote(remoteContent);
   }
 }
@@ -323,16 +318,6 @@ function applyRemote(content) {
   lastSyncedContent = content;
 }
 
-function applyPendingRemote() {
-  if (pendingRemoteContent == null) return;
-
-  applyRemote(pendingRemoteContent);
-  pendingRemoteContent = null;
-
-  if (syncState === "syncing") {
-    setSyncState("online");
-  }
-}
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
