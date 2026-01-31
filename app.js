@@ -14,6 +14,7 @@ import { getUserMemoRef } from "./firebase.js";
 // app.js の最上部（import直後）
 const cachedContent = localStorage.getItem("memo_content") || "";
 const cachedTitle = localStorage.getItem("memo_title") || "";
+const cachedBaseText = localStorage.getItem("memo_baseText") || "";
 
 const menuBtn = document.getElementById("menu-btn");
 const menuPanel = document.getElementById("menu-panel");
@@ -25,6 +26,8 @@ const userInfo = document.getElementById("user-info");
 //const editor = initEditor();
 const editor = initEditor(cachedContent);
 setupToolbar(editor);
+// ★ 起動直後：現在の同期状態を見た目に反映
+setSyncState(syncState);
 
 // 1. タイトル要素の取得
 const titleField = document.getElementById('title-field');
@@ -118,7 +121,7 @@ let saveTimeout = null;
 
 let resumeTimeout = null;
 
-let baseText = "";        // ★ Firestore基準テキスト
+let baseText = cachedBaseText;   // ★ ローカル保存された基準
 let offlineDraft = "";   // ★ オフライン中の全文（任意・デバッグ用）
 let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
@@ -217,6 +220,7 @@ function startFirestoreSync(docRef) {
       // ★ ここで「Firestore基準」を確定
       baseText = mergedContent;
 			baseTextIsAuthoritative = true;
+			localStorage.setItem("memo_baseText", baseText);
 			
 
       lastSyncedContent = mergedContent;
