@@ -50,7 +50,17 @@ function setSyncState(state) {
   renderTitleSyncState();
 
   if (state === "online") {
-    clearBaseTextMark();
+    // ★ ユーザーが編集中なら解除を遅らせる
+    if (editor.hasFocus()) {
+      requestIdleCallback(() => {
+        // フォーカスが外れた後に解除
+        if (!editor.hasFocus()) {
+          clearBaseTextMark();
+        }
+      });
+    } else {
+      clearBaseTextMark();
+    }
   } else {
     applyBaseTextMark();
   }
