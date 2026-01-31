@@ -26,8 +26,7 @@ const userInfo = document.getElementById("user-info");
 //const editor = initEditor();
 const editor = initEditor(cachedContent);
 setupToolbar(editor);
-// ★ 起動直後：現在の同期状態を見た目に反映
-setSyncState(syncState);
+
 
 // 1. タイトル要素の取得
 const titleField = document.getElementById('title-field');
@@ -95,6 +94,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (savedTitle) {
         titleField.value = savedTitle;
     }
+		setSyncState(syncState);
 });
 
 
