@@ -50,17 +50,11 @@ function setSyncState(state) {
   renderTitleSyncState();
 
   if (state === "online") {
-    // ★ ユーザーが編集中なら解除を遅らせる
-    if (editor.hasFocus()) {
-      requestIdleCallback(() => {
-        // フォーカスが外れた後に解除
-        if (!editor.hasFocus()) {
-          clearBaseTextMark();
-        }
-      });
-    } else {
+    // ★ IME未確定中は絶対に解除しない
+    if (!isComposing) {
       clearBaseTextMark();
     }
+    // composing中なら、compositionend で解除される
   } else {
     applyBaseTextMark();
   }
@@ -142,6 +136,7 @@ let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
 let baseTextMark = null;
 let baseTextLineHandles = [];
+let isComposing = false;
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -191,6 +186,19 @@ editor.on("change", (cm, changeObj) => {
   // オンライン中のみ保存予約
   if (saveTimeout) clearTimeout(saveTimeout);
   saveTimeout = setTimeout(saveToFirebase, 800);
+});
+
+editor.on("compositionstart", () => {
+  isComposing = true;
+});
+
+editor.on("compositionend", () => {
+  isComposing = false;
+
+  // ★ IME確定後に pending な解除があれば実行
+  if (syncState === "online") {
+    clearBaseTextMark();
+  }
 });
 
 
