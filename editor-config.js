@@ -99,7 +99,7 @@ function applyAppendFromURL(editor) {
   const lastCh = doc.getLine(lastLine).length;
   const lastLineText = doc.getLine(lastLine);
 
-  const prefix = lastLineText.length === 0 ? "" : "\n";
+  const prefix = lastLineText.length === 0 ? "" : "\n\n";
 
   editor.replaceRange(
     prefix + appendText,
