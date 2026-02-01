@@ -79,5 +79,32 @@ editor.on("change", () => {
 });
 
 
+// ★ ここで1回だけ
+applyAppendFromURL(editor);
+
+
   return editor;
+}
+
+
+
+function applyAppendFromURL(editor) {
+  const params = new URLSearchParams(location.search);
+  const appendText = params.get("append");
+
+  if (!appendText) return;
+
+  const doc = editor.getDoc();
+  const lastLine = doc.lastLine();
+  const lastCh = doc.getLine(lastLine).length;
+  const lastLineText = doc.getLine(lastLine);
+
+  const prefix = lastLineText.length === 0 ? "" : "\n";
+
+  editor.replaceRange(
+    prefix + appendText,
+    { line: lastLine, ch: lastCh }
+  );
+
+  history.replaceState(null, "", location.pathname);
 }
