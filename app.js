@@ -8,8 +8,34 @@ import {
   signOut,
   onAuthStateChanged
 } from "./firebase.js";
-
 import { getUserMemoRef } from "./firebase.js";
+
+/*
+========================================
+ Invariants（同期設計の不変条件）
+========================================
+
+Invariant 0:
+  Firestore 上の content は常に 1 つだけ存在し、
+  分岐・履歴・マージは扱わない
+
+Invariant 1:
+  baseText は同期完了まで編集されない
+  編集可能なのは baseText 以降（diff）のみ
+
+Invariant 2:
+  baseText は
+  「Firestore と editor の両方が同意している最新履歴」である
+
+Invariant 3:
+  diff = editorContent - baseText
+  baseText 更新時、diff は必ず空になる
+
+Invariant 4:
+  first snapshot 到着時点で remoteContent は
+  この端末が採用すべき唯一の真実とする
+========================================
+*/
 
 // app.js の最上部（import直後）
 const cachedContent = localStorage.getItem("memo_content") || "";
@@ -197,67 +223,152 @@ function startFirestoreSync(docRef) {
     const remoteContent = data.content || "";
 
     // ===== 初回 snapshot =====
-    if (firstSnapshot) {
-      const localContent = editor.getValue();
-      let mergedContent = remoteContent;
-
-      // ★ baseText が信用できない場合のみ diff を計算
-      if (!baseTextIsAuthoritative && baseText && localContent.startsWith(baseText)) {
-        const diff = localContent.slice(baseText.length);
-				
-        mergedContent = remoteContent + diff;
-      }
-
-      // editor に反映
-      isInternalChange = true;
-      editor.setValue(mergedContent);
-      isInternalChange = false;
-
-      // タイトル反映
-      titleField.value = remoteTitle;
-      document.title = remoteTitle || "Debug Memo";
-
-      // ★ ここで「Firestore基準」を確定
-      baseText = mergedContent;
-			baseTextIsAuthoritative = true;
-			localStorage.setItem("memo_baseText", baseText);
-			
-
-      lastSyncedContent = mergedContent;
-      lastSyncedTitle = remoteTitle;
-
-      // ★ diff があった場合だけ Firestore に反映
-      if (navigator.onLine && mergedContent !== remoteContent) {
-        setSyncState("syncing");
-        saveTimeout = setTimeout(saveToFirebase, 300);
-      }
-
-      firstSnapshot = false;
-      hideTitleSpinner();
-      setSyncState("online");
-      return;
-    }
-
+		if (firstSnapshot) {
+		  // Invariant 4:
+		  // remoteContent は唯一の真実
+		  commitSync(remoteContent);
+		
+		  // タイトル
+		  titleField.value = remoteTitle;
+		  document.title = remoteTitle || "Debug Memo";
+		  lastSyncedTitle = remoteTitle;
+		
+		  firstSnapshot = false;
+		  hideTitleSpinner();
+		  setSyncState("online");
+		  return;
+		}
     // ===== 2回目以降 =====
-if (remoteContent !== editor.getValue()) {
-  if (!editor.hasFocus()) {
-    applyRemote(remoteContent);
+
+		// diff があるなら snapshot は無視
+		if (diffExists()) {
+  		return;
+		}
+		// diff がない場合のみ同期確定
+		if (remoteContent !== baseText) {
+  		commitSync(remoteContent); // ← これでよい
+		}
+
+		lastSyncedTitle = remoteTitle;
+		
+		if (syncState === "syncing") {
+		  setSyncState("online");
+		}
+  });
+}
+
+async function commitInitialSync({ remoteContent, remoteTitle }) {
+  // ========================================
+  // Sync Commit Phase (Immediate Save)
+  // ========================================
+
+  // Invariant 4:
+  // remoteContent は唯一の真実
+  const localContent = editor.getValue();
+  let mergedContent = remoteContent;
+
+  // Invariant 3:
+  // diff = editorContent - baseText
+  if (
+    !baseTextIsAuthoritative &&
+    baseText &&
+    localContent.startsWith(baseText)
+  ) {
+    const diff = localContent.slice(baseText.length);
+    mergedContent = remoteContent + diff;
+  }
+
+  // editor に即反映
+  isInternalChange = true;
+  editor.setValue(mergedContent);
+  isInternalChange = false;
+
+  // タイトル反映
+  titleField.value = remoteTitle;
+  document.title = remoteTitle || "Debug Memo";
+
+  // Invariant 2:
+  // Firestore と editor が同意する内容
+  baseText = mergedContent;
+  baseTextIsAuthoritative = true;
+  localStorage.setItem("memo_baseText", baseText);
+
+  try {
+    // ★ 即 Firestore に確定保存
+    await setDoc(
+      memoDocRef,
+      {
+        content: mergedContent,
+        title: remoteTitle
+      },
+      { merge: true }
+    );
+
+    lastSyncedContent = mergedContent;
+    lastSyncedTitle = remoteTitle;
+
+    firstSnapshot = false;
+    hideTitleSpinner();
+    setSyncState("online");
+
+  } catch (e) {
+    console.error("Initial sync save failed", e);
+    setSyncState("offline");
   }
 }
 
-    // Firestore確定
-    baseText = remoteContent;
-    baseTextIsAuthoritative = true;
-		
+/**
+ * 同期確定フェーズ
+ * Invariant:
+ *  - baseText を更新する
+ *  - diff は必ず空になる
+ */
+function commitSync(remoteContent) {
+  const localContent = editor.getValue();
+  let merged = remoteContent;
 
-    lastSyncedContent = remoteContent;
-    lastSyncedTitle = remoteTitle;
+  // diff を計算（Invariant 3）
+  if (baseText && localContent.startsWith(baseText)) {
+    const diff = localContent.slice(baseText.length);
+    merged = remoteContent + diff;
+  }
 
-    if (syncState === "syncing") {
-      setSyncState("online");
-    }
-  });
+  // editor を確定内容にする
+  isInternalChange = true;
+  editor.setValue(merged);
+  isInternalChange = false;
+
+  // 🔑 ここが核心
+  baseText = merged;                 // baseText 更新
+  baseTextIsAuthoritative = true;
+  localStorage.setItem("memo_baseText", baseText);
+
+  lastSyncedContent = merged;
+
+  // Firestore に即保存（あなたの方針）
+  saveTimeout = setTimeout(saveToFirebase, 0);
 }
+
+/**
+ * 通常反映フェーズ
+ * Invariant:
+ *  - baseText は更新しない
+ *  - diff を壊さない
+ */
+/*
+function applyRemoteViewOnly(remoteContent) {
+  isInternalChange = true;
+  editor.setValue(remoteContent);
+  isInternalChange = false;
+
+  // ❌ baseText は触らない
+  lastSyncedContent = remoteContent;
+}
+*/
+function diffExists() {
+  return editor.getValue() !== baseText;
+}
+
 
 function stopFirestoreSync() {
   if (unsubscribeSnapshot) {
