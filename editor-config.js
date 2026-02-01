@@ -91,19 +91,22 @@ applyAppendFromURL(editor);
 function applyAppendFromURL(editor) {
   const params = new URLSearchParams(location.search);
   const appendText = params.get("append");
-
   if (!appendText) return;
 
   const doc = editor.getDoc();
-  const lastLine = doc.lastLine();
-  const lastCh = doc.getLine(lastLine).length;
-  const lastLineText = doc.getLine(lastLine);
+  let line = doc.lastLine();
 
-  const prefix = lastLineText.length === 0 ? "" : "\n\n";
+  // 末尾の空行をスキップして、実質的な最終行を探す
+  while (line > 0 && doc.getLine(line).trim() === "") {
+    line--;
+  }
+
+  const insertLine = line + 1;
+  const prefix = "\n\n"; // ← ここで「2改行」を保証
 
   editor.replaceRange(
     prefix + appendText,
-    { line: lastLine, ch: lastCh }
+    { line: insertLine, ch: 0 }
   );
 
   history.replaceState(null, "", location.pathname);
