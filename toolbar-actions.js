@@ -139,9 +139,9 @@ document.getElementById("move-down-btn")
 		
 
     // --- ブロック選択・送信 (💾) ---
-    const  obsidianBtn = document.getElementById(' obsidian-btn');
+    const  obsidianBtn = document.getElementById('obsidian-btn');
     if (obsidianBtn) {
-         obsidianBtn.addEventListener("click", () => {
+        alert("ok"); obsidianBtn.addEventListener("click", () => {
             
             const cursor = editor.getCursor();
             const lastLine = editor.lineCount() - 1;
