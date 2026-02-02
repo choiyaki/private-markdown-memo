@@ -225,13 +225,15 @@ function startFirestoreSync(docRef) {
     // ===== 初回 snapshot =====
 		if (firstSnapshot) {
 		  // Invariant 4:
-		  // remoteContent は唯一の真実
-		  commitSync(remoteContent);
+		  // Firestore の内容が唯一の真実
+		  replaceBaseText(remoteContent);
 		
-		  // タイトル
+		  // タイトル同期
 		  titleField.value = remoteTitle;
 		  document.title = remoteTitle || "Debug Memo";
 		  lastSyncedTitle = remoteTitle;
+		
+		  lastSyncedContent = editor.getValue();
 		
 		  firstSnapshot = false;
 		  hideTitleSpinner();
@@ -317,54 +319,35 @@ async function commitInitialSync({ remoteContent, remoteTitle }) {
   }
 }
 
-/**
- * 同期確定フェーズ
- * Invariant:
- *  - baseText を更新する
- *  - diff は必ず空になる
- */
-function commitSync(remoteContent) {
-  const localContent = editor.getValue();
-  let merged = remoteContent;
+function replaceBaseText(remoteContent) {
+  const doc = editor.getDoc();
 
-  // diff を計算（Invariant 3）
-  if (baseText && localContent.startsWith(baseText)) {
-    const diff = localContent.slice(baseText.length);
-    merged = remoteContent + diff;
-  }
+  const from = { line: 0, ch: 0 };
+  const to = editor.posFromIndex(baseText.length);
 
-  // editor を確定内容にする
   isInternalChange = true;
-  editor.setValue(merged);
+  doc.replaceRange(remoteContent, from, to);
   isInternalChange = false;
 
-  // 🔑 ここが核心
-  baseText = merged;                 // baseText 更新
+  // baseText を更新
+  baseText = remoteContent;
   baseTextIsAuthoritative = true;
   localStorage.setItem("memo_baseText", baseText);
+}
 
-  lastSyncedContent = merged;
+function commitSync(remoteContent) {
+  // 🔑 baseText 部分だけ差し替える
+  replaceBaseText(remoteContent);
 
-  // Firestore に即保存（あなたの方針）
+  // editor はすでに
+  // [remoteContent + 既存 diff] になっている
+
+  lastSyncedContent = editor.getValue();
+
+  // あなたの方針：即保存
   saveTimeout = setTimeout(saveToFirebase, 0);
 }
 
-/**
- * 通常反映フェーズ
- * Invariant:
- *  - baseText は更新しない
- *  - diff を壊さない
- */
-/*
-function applyRemoteViewOnly(remoteContent) {
-  isInternalChange = true;
-  editor.setValue(remoteContent);
-  isInternalChange = false;
-
-  // ❌ baseText は触らない
-  lastSyncedContent = remoteContent;
-}
-*/
 function diffExists() {
   return editor.getValue() !== baseText;
 }
@@ -415,18 +398,6 @@ function clearBaseTextMark() {
     editor.removeLineClass(line, "background", "cm-baseText-line");
   }
   baseTextLineHandles = [];
-}
-
-function applyRemote(content) {
-  isInternalChange = true;
-  editor.setValue(content);
-  isInternalChange = false;
-
-  baseText = content;
-  baseTextIsAuthoritative = true;
-  localStorage.setItem("memo_baseText", baseText);
-
-  lastSyncedContent = content;
 }
 
 

@@ -93,21 +93,41 @@ function applyAppendFromURL(editor) {
   const appendText = params.get("append");
   if (!appendText) return;
 
+  const decoded = decodeURIComponent(appendText);
   const doc = editor.getDoc();
   let line = doc.lastLine();
 
-  // 末尾の空行をスキップして、実質的な最終行を探す
+  // 末尾の空行をスキップ
   while (line > 0 && doc.getLine(line).trim() === "") {
     line--;
   }
 
   const insertLine = line + 1;
-  const prefix = "\n\n"; // ← ここで「2改行」を保証
+  const prefix = "\n\n";
+  const insertText = prefix + decoded;
 
+  // ===== editor 反映 =====
+  isInternalChange = true;
   editor.replaceRange(
-    prefix + appendText,
+    insertText,
     { line: insertLine, ch: 0 }
   );
 
+  // ===== 🔑 カーソルを append 末尾へ =====
+  const lines = insertText.split("\n");
+  const cursorLine = insertLine + lines.length - 1;
+  const cursorCh = lines[lines.length - 1].length;
+
+  editor.setCursor({ line: cursorLine, ch: cursorCh });
+  editor.focus();
+  isInternalChange = false;
+
+  // ===== 保存予約 =====
+  if (memoDocRef && navigator.onLine) {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveToFirebase, 0);
+  }
+
+  // URL を掃除
   history.replaceState(null, "", location.pathname);
 }
