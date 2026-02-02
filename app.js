@@ -158,7 +158,6 @@ let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
 let baseTextMark = null;
 let baseTextLineHandles = [];
-let hadDiffBeforeChange = false;
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -211,7 +210,7 @@ editor.on("change", (cm, changeObj) => {
     memoDocRef                 // Firestore 接続あり
   ) {
     // 🔑 ローカル確定 → baseText に昇格
-    baseText = editor.getValue();
+    //baseText = editor.getValue();
     baseTextIsAuthoritative = true;
     localStorage.setItem("memo_baseText", baseText);
 
@@ -361,16 +360,11 @@ function replaceBaseText(remoteContent) {
 }
 
 function commitSync(remoteContent) {
-  // 🔑 baseText 部分だけ差し替える
+  // 🔑 Firestore から来たものだけを信じる
   replaceBaseText(remoteContent);
 
-  // editor はすでに
-  // [remoteContent + 既存 diff] になっている
-
-  lastSyncedContent = editor.getValue();
-
-  // あなたの方針：即保存
-  saveTimeout = setTimeout(saveToFirebase, 0);
+  // Firestore と editor が一致した瞬間
+  lastSyncedContent = remoteContent;
 }
 
 function diffExists() {
