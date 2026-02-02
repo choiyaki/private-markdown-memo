@@ -158,6 +158,7 @@ let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
 let baseTextMark = null;
 let baseTextLineHandles = [];
+let hadDiffBeforeChange = false;
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -191,17 +192,41 @@ const saveToFirebase = () => {
 };
 
 editor.on("change", (cm, changeObj) => {
-  if (isInternalChange || changeObj.origin === "setValue") return;
+  if (isInternalChange) return;
 
-  // オフライン中：Firestoreには触らない
-  if (!navigator.onLine) {
-    
+  // === 変更前の状態を記録 ===
+  const hadDiff = diffExists();
+
+  // ===========================
+  // （ここで editor の内容は既に変更後）
+  // ===========================
+
+  const hasDiffNow = diffExists();
+
+  // ===== ❶ diff が消えた瞬間 =====
+  if (
+    hadDiff &&                 // 直前まで diff があった
+    !hasDiffNow &&             // 今は diff がない
+    navigator.onLine &&        // オンライン
+    memoDocRef                 // Firestore 接続あり
+  ) {
+    // 🔑 ローカル確定 → baseText に昇格
+    baseText = editor.getValue();
+    baseTextIsAuthoritative = true;
+    localStorage.setItem("memo_baseText", baseText);
+
+    // 🔑 Firestore に即保存
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveToFirebase, 0);
+
     return;
   }
 
-  // オンライン中のみ保存予約
-  if (saveTimeout) clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(saveToFirebase, 800);
+  // ===== ❷ 通常のオンライン編集中 =====
+  if (navigator.onLine && memoDocRef) {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveToFirebase, 800);
+  }
 });
 
 
