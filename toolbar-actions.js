@@ -9,12 +9,31 @@ export function setupToolbar(editor) {
 document.getElementById("outdent-btn")
   .addEventListener("click", () => outdent(editor));
 
-    // 上下移動
-    document.getElementById("move-up-btn")
+// 上下移動
+document.getElementById("move-up-btn")
   .addEventListener("click", () => moveLineUp(editor));
 
 document.getElementById("move-down-btn")
   .addEventListener("click", () => moveLineDown(editor));
+	
+// --- ペースト ---
+const pasteBtn = document.getElementById("paste-btn");
+if (pasteBtn) {
+    pasteBtn.addEventListener("click", async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text) return;
+
+            const cursor = editor.getCursor();
+
+            editor.replaceRange(text, cursor);
+            editor.focus();
+        } catch (err) {
+            alert("クリップボードの読み取りに失敗しました");
+            console.error(err);
+        }
+    });
+}
 
     // ✅ チェックボックス・トグル機能（リスト → 未完了 → 完了 → 解除）
     document.getElementById("checkbox-btn")
