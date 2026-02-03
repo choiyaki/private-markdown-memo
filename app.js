@@ -48,9 +48,6 @@ const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const userInfo = document.getElementById("user-info");
 
-let isIMEComposing = false;
-let pendingCommit = null;
-
 // 1. 初期化
 //const editor = initEditor();
 const editor = initEditor(cachedContent);
@@ -229,7 +226,7 @@ function startFirestoreSync(docRef) {
 		if (firstSnapshot) {
 		  // Invariant 4:
 		  // remoteContent は唯一の真実
-		  requestCommit(() => commitSync(remoteContent));
+		  commitSync(remoteContent);
 		
 		  // タイトル
 		  titleField.value = remoteTitle;
@@ -249,15 +246,7 @@ function startFirestoreSync(docRef) {
 		}
 		// diff がない場合のみ同期確定
 		if (remoteContent !== baseText) {
-  		// ❌ 直接呼ばない
-// commitSync(remoteContent);
-
-// ✅ 必ず requestCommit 経由
-requestCommit(() => {
-  if (remoteContent !== baseText && !diffExists()) {
-    commitSync(remoteContent);
-  }
-}); // ← これでよい
+  		commitSync(remoteContent); // ← これでよい
 		}
 
 		lastSyncedTitle = remoteTitle;
@@ -266,15 +255,6 @@ requestCommit(() => {
 		  setSyncState("online");
 		}
   });
-}
-
-function requestCommit(fn) {
-  if (isIMEComposing) {
-    // IME中は「最後の1回だけ」保持
-    pendingCommit = fn;
-    return;
-  }
-  fn();
 }
 
 async function commitInitialSync({ remoteContent, remoteTitle }) {
@@ -337,27 +317,6 @@ async function commitInitialSync({ remoteContent, remoteTitle }) {
   }
 }
 
-const imeIndicator = document.getElementById("ime-indicator");
-
-const input = editor.getInputField();
-
-input.addEventListener("compositionstart", () => {
-  isIMEComposing = true;
-  showIMEIndicator();
-});
-
-input.addEventListener("compositionend", () => {
-  isIMEComposing = false;
-  hideIMEIndicator();
-
-  // ★ IME終了後に保留していた commit を実行
-  if (pendingCommit) {
-    pendingCommit();
-    pendingCommit = null;
-  }
-});
-
-
 /**
  * 同期確定フェーズ
  * Invariant:
@@ -365,29 +324,28 @@ input.addEventListener("compositionend", () => {
  *  - diff は必ず空になる
  */
 function commitSync(remoteContent) {
-  // ★ IME中なら即反映しない
-  if (isIMEComposing) {
-    pendingRemoteContent = remoteContent;
-    return;
-  }
-
   const localContent = editor.getValue();
   let merged = remoteContent;
 
+  // diff を計算（Invariant 3）
   if (baseText && localContent.startsWith(baseText)) {
     const diff = localContent.slice(baseText.length);
     merged = remoteContent + diff;
   }
 
+  // editor を確定内容にする
   isInternalChange = true;
   editor.setValue(merged);
   isInternalChange = false;
 
-  baseText = merged;
+  // 🔑 ここが核心
+  baseText = merged;                 // baseText 更新
   baseTextIsAuthoritative = true;
   localStorage.setItem("memo_baseText", baseText);
 
   lastSyncedContent = merged;
+
+  // Firestore に即保存（あなたの方針）
   saveTimeout = setTimeout(saveToFirebase, 0);
 }
 
