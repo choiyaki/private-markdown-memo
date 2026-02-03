@@ -53,40 +53,6 @@ const userInfo = document.getElementById("user-info");
 const editor = initEditor(cachedContent);
 setupToolbar(editor);
 
-const wrapper = editor.getWrapperElement();
-
-wrapper.addEventListener("compositionstart", () => {
-  isComposing = true;
-});
-
-wrapper.addEventListener("compositionend", () => {
-  isComposing = false;
-  flushDeferredEditorUpdate();
-});
-
-function requestEditorUpdate(content) {
-  if (isComposing) {
-    // IME中 → 最後の要求だけ保持
-    deferredEditorContent = content;
-    return;
-  }
-  applyEditorUpdate(content);
-}
-
-function applyEditorUpdate(content) {
-  isInternalChange = true;
-  requestEditorUpdate(content);
-  isInternalChange = false;
-}
-
-function flushDeferredEditorUpdate() {
-  if (deferredEditorContent == null) return;
-
-  const content = deferredEditorContent;
-  deferredEditorContent = null;
-
-  applyEditorUpdate(content);
-}
 
 // 1. タイトル要素の取得
 const titleField = document.getElementById('title-field');
@@ -192,9 +158,6 @@ let firstSnapshot = true;
 let baseTextIsAuthoritative = false; // ★ Firestoreとeditorが一致しているか
 let baseTextMark = null;
 let baseTextLineHandles = [];
-
-let isComposing = false;
-let deferredEditorContent = null;
 
 const saveToFirebase = () => {
   if (!memoDocRef) return;
@@ -317,7 +280,7 @@ async function commitInitialSync({ remoteContent, remoteTitle }) {
 
   // editor に即反映
   isInternalChange = true;
-  requestEditorUpdate(mergedContent);
+  editor.setValue(mergedContent);
   isInternalChange = false;
 
   // タイトル反映
@@ -372,7 +335,7 @@ function commitSync(remoteContent) {
 
   // editor を確定内容にする
   isInternalChange = true;
-  requestEditorUpdate(merged);
+  editor.setValue(merged);
   isInternalChange = false;
 
   // 🔑 ここが核心
@@ -456,7 +419,7 @@ function clearBaseTextMark() {
 
 function applyRemote(content) {
   isInternalChange = true;
-  requestEditorUpdate(content);
+  editor.setValue(content);
   isInternalChange = false;
 
   baseText = content;
