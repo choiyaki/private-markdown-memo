@@ -49,7 +49,7 @@ const logoutBtn = document.getElementById("logout-btn");
 const userInfo = document.getElementById("user-info");
 
 let isIMEComposing = false;
-let pendingRemoteContent = null;
+let pendingCommit = null;
 
 // 1. 初期化
 //const editor = initEditor();
@@ -229,7 +229,7 @@ function startFirestoreSync(docRef) {
 		if (firstSnapshot) {
 		  // Invariant 4:
 		  // remoteContent は唯一の真実
-		  commitSync(remoteContent);
+		  requestCommit(() => commitSync(remoteContent));
 		
 		  // タイトル
 		  titleField.value = remoteTitle;
@@ -249,7 +249,15 @@ function startFirestoreSync(docRef) {
 		}
 		// diff がない場合のみ同期確定
 		if (remoteContent !== baseText) {
-  		commitSync(remoteContent); // ← これでよい
+  		// ❌ 直接呼ばない
+// commitSync(remoteContent);
+
+// ✅ 必ず requestCommit 経由
+requestCommit(() => {
+  if (remoteContent !== baseText && !diffExists()) {
+    commitSync(remoteContent);
+  }
+}); // ← これでよい
 		}
 
 		lastSyncedTitle = remoteTitle;
@@ -258,6 +266,15 @@ function startFirestoreSync(docRef) {
 		  setSyncState("online");
 		}
   });
+}
+
+function requestCommit(fn) {
+  if (isIMEComposing) {
+    // IME中は「最後の1回だけ」保持
+    pendingCommit = fn;
+    return;
+  }
+  fn();
 }
 
 async function commitInitialSync({ remoteContent, remoteTitle }) {
@@ -322,24 +339,23 @@ async function commitInitialSync({ remoteContent, remoteTitle }) {
 
 const imeIndicator = document.getElementById("ime-indicator");
 
-const cmInput = editor.getInputField();
+const input = editor.getInputField();
 
-cmInput.addEventListener("compositionstart", () => {
+input.addEventListener("compositionstart", () => {
   isIMEComposing = true;
-  imeIndicator.style.display = "block";
+  showIMEIndicator();
 });
 
-cmInput.addEventListener("compositionend", () => {
+input.addEventListener("compositionend", () => {
   isIMEComposing = false;
-  imeIndicator.style.display = "none";
+  hideIMEIndicator();
 
-  // ★ IME確定後に保留中の同期を反映
-  if (pendingRemoteContent !== null) {
-    commitSync(pendingRemoteContent);
-    pendingRemoteContent = null;
+  // ★ IME終了後に保留していた commit を実行
+  if (pendingCommit) {
+    pendingCommit();
+    pendingCommit = null;
   }
 });
-
 
 
 /**
